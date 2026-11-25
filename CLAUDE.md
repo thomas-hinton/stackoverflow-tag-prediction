@@ -1,3 +1,7 @@
+## Language
+
+All repository content must be written in English: commit messages, branch names, issues, pull requests, review comments, code, comments and documentation. This applies to every collaborator and agent, whatever language is used in conversation.
+
 ## Agent skills
 
 ### Issue tracker
