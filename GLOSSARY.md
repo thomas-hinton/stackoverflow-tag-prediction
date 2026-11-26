@@ -44,6 +44,14 @@ _Avoid_: Prediction, output, result
 The estimated probability that a Suggestion applies to the Title.
 _Avoid_: Confidence, weight, logit
 
+**Score cut-off**:
+The minimum Score a Suggestion needs to enter the Suggestion list; each Tagger has its own.
+_Avoid_: Threshold (alone), confidence level
+
+**Suggestion policy**:
+The shared rule that turns per-Tag Scores into a Suggestion list: rank by Score, keep those at or above the Score cut-off, never fewer than one, never more than five.
+_Avoid_: Post-processing, decoding
+
 **Suggestion list**:
 The ranked Suggestions returned for one Title: those whose Score passes the cut-off, never fewer than one and never more than five.
 _Avoid_: Top-k, prediction set
