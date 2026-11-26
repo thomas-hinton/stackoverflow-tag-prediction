@@ -56,6 +56,7 @@ A single JSON object:
 | `hyperparameters` | object | The Tagger's section of `config.toml` at training time. |
 | `seed` | int | The project seed at training time. |
 | `training_seconds` | float or null | Wall-clock time of training plus tuning; null when unknown. |
+| `training_details` | object | What the Tagger kind recorded about its training beyond the hyperparameters; `{}` for the Linear tagger. For the Transformer tagger: `max_length` (tokens), `best_epoch` (the epoch kept), `epochs_run` and `history` (per epoch: `epoch`, `loss`, `validation_micro_f1`, `elapsed_seconds`). Added without a schema bump: it is a new key, nothing existing changed. |
 | `git_commit` | string or null | Commit checked out when `evaluate` ran; null outside a git checkout. |
 | `package_version` | string | `so-tagger` version that ran `evaluate`. |
 | `tagger_package_version` | string | `so-tagger` version that trained the Tagger. |
@@ -84,11 +85,15 @@ Conventions:
 All values are in [0, 1] except `support`, `mean_suggestions_per_question`, sizes, counts and
 durations.
 
-## Baseline
+## Results on the test split
 
-First run of the Linear tagger on the frozen split (615 test Questions, 86 Supported tags),
-Score cut-off 0.45 tuned on validation (validation micro-F1 0.523):
+First run of each Tagger on the frozen split (615 test Questions, 86 Supported tags), with the
+default `config.toml`:
 
-| micro-F1 | macro-F1 | P@1 | P@3 | R@5 | Suggestions per Question |
-| --- | --- | --- | --- | --- | --- |
-| 0.509 | 0.463 | 0.611 | 0.306 | 0.694 | 1.47 |
+| Tagger | Score cut-off (validation micro-F1) | micro-F1 | macro-F1 | P@1 | P@3 | R@5 | Suggestions per Question | Training |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Linear | 0.45 (0.523) | 0.509 | **0.463** | **0.611** | 0.306 | 0.694 | 1.47 | 10 s |
+| Transformer | 0.25 (0.527) | 0.509 | 0.359 | 0.605 | **0.315** | **0.710** | 1.33 | 25 min, 10 epochs kept of 10 |
+
+The Transformer tagger ranks Tags slightly better (P@3, R@5) but neglects rare Tags (macro-F1);
+its training time is on a 12-thread laptop CPU.

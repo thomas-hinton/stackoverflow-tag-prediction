@@ -14,7 +14,7 @@ A new Tagger kind subclasses ``Tagger`` and implements ``train``, ``score``, ``_
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar, Self
@@ -57,6 +57,10 @@ class TaggerMetadata:
     """Wall-clock time of training plus Score cut-off tuning."""
     package_version: str
     created_at: str
+    training_details: dict[str, Any] = field(default_factory=dict)
+    """What a Tagger kind learns about its own training beyond the hyperparameters, such as
+    the Transformer tagger's maximum sequence length and kept epoch. Empty for the Linear
+    tagger, and absent from metadata written before it existed."""
 
     @classmethod
     def at_training(

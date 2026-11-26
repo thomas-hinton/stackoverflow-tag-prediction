@@ -1,6 +1,7 @@
 """Command-line interface of the project."""
 
 import json
+import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -87,6 +88,21 @@ def _user_errors() -> Iterator[None]:
         raise typer.Exit(code=1) from error
 
 
+class _EchoHandler(logging.Handler):
+    """Print log records to the standard error of the running command."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        typer.echo(self.format(record), err=True)
+
+
+def _show_progress_messages() -> None:
+    """Show the package's progress messages, such as the Transformer tagger's epoch log."""
+    package_logger = logging.getLogger("so_tagger")
+    package_logger.setLevel(logging.INFO)
+    if not any(isinstance(handler, _EchoHandler) for handler in package_logger.handlers):
+        package_logger.addHandler(_EchoHandler())
+
+
 def _version_callback(value: bool) -> None:
     if value:
         typer.echo(f"so-tagger {__version__}")
@@ -106,6 +122,7 @@ def main(
     ] = False,
 ) -> None:
     """Suggest Tags for a StackOverflow Question from its Title."""
+    _show_progress_messages()
 
 
 @app.command()
@@ -175,7 +192,8 @@ def train(
 ) -> None:
     """Train a Tagger on the training split and save it as a Tagger directory.
 
-    Hyperparameters come from the Tagger's section of the configuration. The Score cut-off is
+    Hyperparameters come from the Tagger's section of the configuration. The transformer
+    Tagger needs the `transformer` extra (`uv sync --extra transformer`). The Score cut-off is
     then tuned on the validation split: the cut-off from 0.01 to 0.99 (step 0.01) whose
     Suggestion lists reach the best micro-F1, the smallest one on ties. The test split is never
     read.

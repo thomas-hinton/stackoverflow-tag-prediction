@@ -239,6 +239,7 @@ def metrics_report(
         "hyperparameters": metadata.training_config,
         "seed": metadata.seed,
         "training_seconds": metadata.training_seconds,
+        "training_details": metadata.training_details,
         "git_commit": git_commit,
         "package_version": __version__,
         "tagger_package_version": metadata.package_version,

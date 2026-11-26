@@ -19,8 +19,15 @@ uv run so-tagger --version
 
 Use `uv sync --frozen` to install exactly what `uv.lock` pins (this is what CI does).
 
+The Transformer tagger needs the `transformer` extra (CPU-only PyTorch and Hugging Face
+`transformers`, about 1 GB). The base install leaves it out so that the Linear tagger stays light:
+
+```bash
+uv sync --extra transformer
+```
+
 Settings shared by the pipeline, such as the seed, the Supported tag frequency cut-off, the
-split ratios and the Linear tagger's hyperparameters, live in the versioned
+split ratios and both Taggers' hyperparameters, live in the versioned
 [`config.toml`](config.toml).
 
 ## Quickstart (CLI)
@@ -33,6 +40,11 @@ uv run so-tagger split                    # -> data/splits/{train,validation,tes
 uv run so-tagger train --tagger linear    # -> artifacts/linear/ (model + metadata.json)
 uv run so-tagger suggest "How do I parse JSON in Python?"
 uv run so-tagger evaluate                 # -> metrics/linear-test.json
+
+# Transformer tagger (needs `uv sync --extra transformer`; about 25 minutes on a laptop CPU)
+uv run so-tagger train --tagger transformer      # -> artifacts/transformer/
+uv run so-tagger evaluate --tagger transformer   # -> metrics/transformer-test.json
+uv run so-tagger suggest --tagger transformer "How do I parse JSON in Python?"
 ```
 
 ```text
@@ -43,15 +55,26 @@ json    0.990
 
 `train` tunes the Score cut-off on the validation split and saves it with the Tagger; `evaluate`
 measures the Tagger on the test split and writes a metrics file. The tuning rule and the metrics
-file schema are documented in [docs/metrics.md](docs/metrics.md). The Linear tagger's baseline
-on the test split:
+file schema are documented in [docs/metrics.md](docs/metrics.md). Results on the test split:
+
+| Tagger | micro-F1 | macro-F1 | P@1 | P@3 | R@5 | Training |
+| --- | --- | --- | --- | --- | --- | --- |
+| Linear | 0.509 | 0.463 | 0.611 | 0.306 | 0.694 | 10 s |
+| Transformer | 0.509 | 0.359 | 0.605 | 0.315 | 0.710 | 25 min |
+
+The Transformer tagger fine-tunes DistilBERT on CPU ([ADR 0001](docs/adr/0001-distilbert-fine-tuned-on-cpu.md)):
+it sets its maximum sequence length from the training Titles, evaluates validation micro-F1 after
+each epoch and keeps the best epoch, with early stopping. It logs one line per epoch:
 
 ```text
-micro-F1  0.509  (precision 0.527, recall 0.491)
-macro-F1  0.463
-P@1 0.611  R@1 0.453  P@3 0.306  R@3 0.619  P@5 0.211  R@5 0.694
-Suggestions per Question: 1.47
+Maximum sequence length: 29 tokens (covers the 99th percentile of training Titles).
+Epoch 1/10: loss 0.2914, validation micro-F1 0.1320, 151s elapsed.
+...
+Epoch 10/10: loss 0.0218, validation micro-F1 0.5269, 1479s elapsed.
+Kept epoch 10 (validation micro-F1 0.5269).
 ```
+
+A saved Tagger directory loads offline: it holds the model, the tokenizer and `metadata.json`.
 
 Add `--json` to `suggest` for machine-readable output. Every command has `--help`, takes its
 input and output locations as options, and reads its settings from `config.toml` (`--config`
@@ -79,8 +102,12 @@ uv run ruff check .            # lint (notebooks included)
 uv run ruff format --check .   # formatting
 uv run mypy                    # strict type checking
 uv run pytest                  # tests with coverage
-uv run pytest -m "not slow"    # skip heavy tests
+uv run pytest -m "not slow"    # skip heavy tests (CI does)
 ```
+
+The Tagger contract suite runs against both Taggers; the Transformer tagger uses a tiny
+randomly initialised DistilBERT built in the test, so no checkpoint is downloaded. The only
+`slow` test fine-tunes the real `distilbert-base-uncased` checkpoint.
 
 CI runs the same commands on every pull request to `main` and on every push to `main`.
 

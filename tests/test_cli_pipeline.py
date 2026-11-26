@@ -8,7 +8,7 @@ import pytest
 from typer.testing import CliRunner, Result
 
 from so_tagger.cli import app
-from tests.conftest import FIXTURE_DATASET, FIXTURE_SUPPORTED_TAGS
+from tests.conftest import FIXTURE_DATASET, FIXTURE_SUPPORTED_TAGS, needs_transformer_extra
 
 runner = CliRunner()
 
@@ -144,7 +144,9 @@ def test_split_fails_clearly_when_a_supported_tag_is_absent_from_training(
     assert not (tmp_path / "splits" / "train.jsonl").exists()
 
 
-def train(tmp_path: Path, config: Path, tagger_dir: Path | None = None) -> Path:
+def train(
+    tmp_path: Path, config: Path, tagger_dir: Path | None = None, kind: str = "linear"
+) -> Path:
     splits = tmp_path / "splits"
     if not splits.exists():
         split(prepare(tmp_path, config), splits, config)
@@ -152,7 +154,7 @@ def train(tmp_path: Path, config: Path, tagger_dir: Path | None = None) -> Path:
     invoke(
         "train",
         "--tagger",
-        "linear",
+        kind,
         "--splits-dir",
         splits,
         "--output-dir",
@@ -298,6 +300,7 @@ METRICS_KEYS = {
     "tagger_package_version",
     "tagger_created_at",
     "created_at",
+    "training_details",
 }
 
 
@@ -399,3 +402,92 @@ def test_suggest_rejects_an_empty_title(title: str) -> None:
 
     assert result.exit_code == 2
     assert "Title must not be empty" in result.output
+
+
+def test_transformer_train_then_evaluate_writes_a_valid_metrics_file(
+    tmp_path: Path, fixture_config: Path
+) -> None:
+    needs_transformer_extra("transformer")
+    splits = split(prepare(tmp_path, fixture_config), tmp_path / "splits", fixture_config)
+    tagger_dir = tmp_path / "transformer"
+    trained = invoke(
+        "train",
+        "--tagger",
+        "transformer",
+        "--splits-dir",
+        splits,
+        "--output-dir",
+        tagger_dir,
+        "--config",
+        fixture_config,
+    )
+    metrics_path = tmp_path / "transformer-test.json"
+
+    evaluated = invoke(
+        "evaluate",
+        "--tagger",
+        "transformer",
+        "--tagger-dir",
+        tagger_dir,
+        "--splits-dir",
+        splits,
+        "--output",
+        metrics_path,
+    )
+
+    assert "Trained the transformer Tagger on 50 Questions (4 Supported tags)." in trained.output
+    assert "Epoch 1/2: loss" in trained.output
+    assert "Maximum sequence length:" in trained.output
+    report = json.loads(metrics_path.read_text(encoding="utf-8"))
+    assert set(report) == METRICS_KEYS
+    assert (report["tagger"], report["split"], report["schema_version"]) == (
+        "transformer",
+        "test",
+        1,
+    )
+    assert report["split_sizes"] == {"train": 50, "validation": 11, "test": 11}
+    assert report["training_seconds"] > 0
+    assert report["hyperparameters"]["learning_rate"] == 1e-3
+    details = report["training_details"]
+    assert details["best_epoch"] in (1, 2)
+    assert details["epochs_run"] == len(details["history"])
+    assert details["max_length"] >= 3
+    assert 0.0 <= report["metrics"]["micro_f1"] <= 1.0
+    assert set(report["metrics"]["per_tag"]) == set(FIXTURE_SUPPORTED_TAGS)
+    assert "Evaluated the transformer Tagger on 11 test Questions" in evaluated.output
+
+
+def test_transformer_suggest_prints_valid_suggestions(tmp_path: Path, fixture_config: Path) -> None:
+    needs_transformer_extra("transformer")
+    tagger_dir = train(tmp_path, fixture_config, kind="transformer")
+
+    result = invoke(
+        "suggest",
+        "How do I parse JSON in Python?",
+        "--tagger",
+        "transformer",
+        "--tagger-dir",
+        tagger_dir,
+        "--json",
+    )
+
+    suggestions = json.loads(result.stdout)
+    assert 1 <= len(suggestions) <= 5
+    scores = [suggestion["score"] for suggestion in suggestions]
+    assert scores == sorted(scores, reverse=True)
+    for suggestion in suggestions:
+        assert suggestion["tag"] in FIXTURE_SUPPORTED_TAGS
+        assert 0.0 <= suggestion["score"] <= 1.0
+
+
+def test_suggest_rejects_a_tagger_directory_of_another_kind(
+    tmp_path: Path, fixture_config: Path
+) -> None:
+    tagger_dir = train(tmp_path, fixture_config)
+
+    result = runner.invoke(
+        app, ["suggest", "Any title", "--tagger", "transformer", "--tagger-dir", str(tagger_dir)]
+    )
+
+    assert result.exit_code == 1
+    assert "holds a 'linear' Tagger, not a 'transformer' one" in result.output

@@ -26,8 +26,11 @@ jobs:
           enable-cache: true
           python-version: "3.12"
 
+      # The `transformer` extra (CPU-only torch, transformers) lets the Tagger contract suite
+      # run the Transformer tagger. The uv cache keeps its wheels between runs; tests use a
+      # tiny local checkpoint, so nothing is downloaded from the Hugging Face Hub.
       - name: Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --extra transformer
 
       - name: Lint
         run: uv run ruff check .
@@ -39,7 +42,7 @@ jobs:
         run: uv run mypy
 
       - name: Tests
-        run: uv run pytest
+        run: uv run pytest -m "not slow"
 
       - name: Coverage summary
         if: always()

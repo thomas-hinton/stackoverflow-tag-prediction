@@ -1,6 +1,7 @@
 """Seam 2: the Tagger contract, one suite run against every Tagger kind.
 
-#10 adds the Transformer tagger to TAGGER_KINDS; this suite then covers it unchanged.
+The Transformer tagger runs on a tiny local checkpoint (see ``tiny_checkpoint``), so the suite
+needs no download and stays fast on CPU.
 """
 
 import json
@@ -20,7 +21,7 @@ from so_tagger.suggestion_policy import (
     apply_suggestion_policy,
 )
 from so_tagger.taggers import TAGGER_KINDS, Tagger, TaggerError, load_tagger, train_tagger
-from tests.conftest import FIXTURE_CONFIG, FIXTURE_DATASET, FIXTURE_SUPPORTED_TAGS
+from tests.conftest import FIXTURE_DATASET, FIXTURE_SUPPORTED_TAGS, needs_transformer_extra
 
 TITLES = [
     "How do I parse JSON in Python?",
@@ -32,15 +33,20 @@ OFF_TOPIC_TITLE = "Hello, how are you?"
 
 
 @pytest.fixture(scope="module", params=TAGGER_KINDS)
-def tagger(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory) -> Tagger:
+def tagger(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+    fixture_config_toml: str,
+) -> Tagger:
+    kind: str = request.param
+    needs_transformer_extra(kind)
     config_path = tmp_path_factory.mktemp("config") / "config.toml"
-    config_path.write_text(FIXTURE_CONFIG, encoding="utf-8")
+    config_path.write_text(fixture_config_toml, encoding="utf-8")
     config = load_config(config_path)
     dataset = prepare_questions(read_raw_questions(FIXTURE_DATASET), config.data.frequency_cutoff)
     dataset_split = split_questions(
         dataset.questions, dataset.supported_tags, config.split, config.seed
     )
-    kind: str = request.param
     return train_tagger(kind, dataset_split.train, dataset_split.validation, config)
 
 

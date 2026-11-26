@@ -11,6 +11,14 @@ dependencies = [
     "typer>=0.12",
 ]
 
+[project.optional-dependencies]
+# The Transformer tagger. Kept out of the base install so that the Linear tagger stays light.
+# torch comes from the PyTorch CPU wheel index (see [tool.uv.sources]), never as CUDA wheels.
+transformer = [
+    "torch>=2.4",
+    "transformers>=4.44",
+]
+
 [project.scripts]
 so-tagger = "so_tagger.cli:app"
 
@@ -39,6 +47,15 @@ packages = ["src/so_tagger"]
 [tool.uv]
 default-groups = ["dev"]
 
+# CPU-only PyTorch: avoids multi-GB CUDA wheels locally, in CI and in Docker (ADR 0001).
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
@@ -65,6 +82,12 @@ files = ["src", "tests"]
 [[tool.mypy.overrides]]
 module = ["sklearn.*", "joblib.*"]
 ignore_missing_imports = true
+
+# transformers leaves some functions unannotated (`PreTrainedModel.eval`,
+# `get_linear_schedule_with_warmup`, ...): allow calling them from this module only.
+[[tool.mypy.overrides]]
+module = ["so_tagger.taggers.transformer"]
+disallow_untyped_calls = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -18,7 +18,7 @@ from so_tagger.evaluation import (
 from so_tagger.split import split_questions
 from so_tagger.suggestion_policy import apply_suggestion_policy
 from so_tagger.taggers import TAGGER_KINDS, train_tagger
-from tests.conftest import FIXTURE_CONFIG, FIXTURE_DATASET
+from tests.conftest import FIXTURE_DATASET, needs_transformer_extra
 
 # Two Questions, four Supported tags. `d` is never true and never suggested at cut-off 0.5.
 TAGS = ("a", "b", "c", "d")
@@ -107,10 +107,11 @@ def _independent_best_cutoff(
 
 @pytest.mark.parametrize("kind", TAGGER_KINDS)
 def test_tuned_cutoff_is_the_best_validation_micro_f1(
-    kind: str, tmp_path_factory: pytest.TempPathFactory
+    kind: str, tmp_path_factory: pytest.TempPathFactory, fixture_config_toml: str
 ) -> None:
+    needs_transformer_extra(kind)
     config_path = tmp_path_factory.mktemp("config") / "config.toml"
-    config_path.write_text(FIXTURE_CONFIG, encoding="utf-8")
+    config_path.write_text(fixture_config_toml, encoding="utf-8")
     config = load_config(config_path)
     dataset = prepare_questions(read_raw_questions(FIXTURE_DATASET), config.data.frequency_cutoff)
     split = split_questions(dataset.questions, dataset.supported_tags, config.split, config.seed)
