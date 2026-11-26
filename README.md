@@ -245,12 +245,12 @@ gh release create v0.1.0 dist/linear-tagger.tar.gz dist/linear-metrics.json \
   --target main --prerelease --title v0.1.0 --notes "Linear tagger trained by hand."
 ```
 
-Publishing the Release starts the CD workflow; follow it with `gh run watch`. The first time
-an image is pushed, the GHCR package is created private: make it public once, in the package
-settings on GitHub (**Package settings → Change visibility → Public**), so that
-`docker compose up` works without `docker login`. GitHub offers no API for this step. The
-package is linked to the repository through the image's `org.opencontainers.image.source`
-label.
+Publishing the Release starts the CD workflow; follow it with `gh run watch`. The workflow
+pushes the image with the repository's `GITHUB_TOKEN`, and the image's
+`org.opencontainers.image.source` label points at the repository. The GHCR package is therefore
+linked to the repository and inherits its public visibility: `docker compose up` pulls the
+image without `docker login`, and no step on GHCR is needed. If the pull fails with
+`unauthorized` or `denied`, check the visibility in the package settings on GitHub.
 
 ## Data exploration
 
