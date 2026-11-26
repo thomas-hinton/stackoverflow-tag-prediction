@@ -1,0 +1,615 @@
+{"question_id": 1987528, "title": "Is it possible to execute the procedure of a function in the scope of the caller?", "tags": ["php"]}
+{"question_id": 1987584, "title": "How do I make a MVC 2 Json serializable structure with appropriate PK array keys", "tags": ["vb.net", "json"]}
+{"question_id": 1987594, "title": "Passing integer by reference", "tags": ["iphone", "objective-c"]}
+{"question_id": 1987742, "title": "Safely rendering user provided django templates", "tags": ["django"]}
+{"question_id": 1987749, "title": "Why do I get \"AccessDenied\" when trying to use HttpListener?", "tags": [".net", "web-services", "sockets"]}
+{"question_id": 1987814, "title": "Full stack framework for Java", "tags": ["java"]}
+{"question_id": 1987833, "title": "How to synchronize column widths between two nested datagrids?", "tags": ["wpf"]}
+{"question_id": 1987856, "title": "Yui files are too heavy and affect site's performance", "tags": ["asp.net", "performance"]}
+{"question_id": 1987893, "title": "While storing 0.0 in a datatable it gets stored as 0 only", "tags": ["c#", "asp.net"]}
+{"question_id": 1987926, "title": "How do I grep recursively?", "tags": ["linux"]}
+{"question_id": 1987936, "title": "Polarized shift of percentage values", "tags": ["actionscript-3", "math"]}
+{"question_id": 1987952, "title": "Combine multiple files and folders into one file using PHP", "tags": ["php"]}
+{"question_id": 1987961, "title": "resolution in WPF", "tags": ["wpf"]}
+{"question_id": 1987996, "title": "C++ #define in PHP", "tags": ["php"]}
+{"question_id": 1988023, "title": "PHP: Why typecast with !!$var instead of (boolean)$var?", "tags": ["php"]}
+{"question_id": 1988027, "title": "BitMap Eventlistener not working", "tags": ["flash", "actionscript-3"]}
+{"question_id": 1988077, "title": "is it possible to overload a final method", "tags": ["java"]}
+{"question_id": 1988115, "title": "Cubic image converter?", "tags": ["image"]}
+{"question_id": 1988149, "title": "Why django contains a lot of '__init__.py'?", "tags": ["python", "django"]}
+{"question_id": 1988150, "title": "Qt Python - report in toolbox: QTextDocument and QPainter", "tags": ["python", "html", "qt"]}
+{"question_id": 1988191, "title": "Custom Base32 encoding code C#", "tags": ["c#"]}
+{"question_id": 1988216, "title": "What exactly means locking on an object?", "tags": ["c#", "multithreading"]}
+{"question_id": 1988267, "title": "Apache Options -Indexes configuration not working", "tags": ["apache"]}
+{"question_id": 1988358, "title": "How to transfer paramenters to Partial View in ASP.NET MVC?", "tags": ["asp.net", "asp.net-mvc"]}
+{"question_id": 1988415, "title": "cannot convert from 'System.Guid?' to 'System.Guid'", "tags": [".net"]}
+{"question_id": 1988469, "title": "Strange SQLite leaks on iPhone", "tags": ["iphone", "sqlite"]}
+{"question_id": 1988475, "title": "exception not getting caught when not in the right package in python", "tags": ["python"]}
+{"question_id": 1988499, "title": "Meta-tags for mobile – should they be used?", "tags": ["html"]}
+{"question_id": 1988503, "title": "Excel: Find the minimal value in a column", "tags": ["excel"]}
+{"question_id": 1988614, "title": "how to get hidden element value in javascript", "tags": ["javascript"]}
+{"question_id": 1988615, "title": "Div in IE6 is not fixing itself on the bottom", "tags": ["css"]}
+{"question_id": 1988642, "title": "set visual studio 2008 compiler for c not c++", "tags": ["c++", "c"]}
+{"question_id": 1988690, "title": "Creating a fixed formatted cell in UITableview", "tags": ["iphone"]}
+{"question_id": 1988694, "title": "C# screensaver: configuration dialog modal to provided HWND", "tags": ["c#"]}
+{"question_id": 1988736, "title": "Using macros without the escape key", "tags": ["xcode"]}
+{"question_id": 1988804, "title": "What is memoization and how can I use it in Python?", "tags": ["python"]}
+{"question_id": 1988814, "title": "Changing a pointer to an array in C", "tags": ["c++", "c"]}
+{"question_id": 1988876, "title": "Is there ANY way to write an image to the Win32 Console?", "tags": ["image"]}
+{"question_id": 1988915, "title": "Multipe relationships in Rails where the class name does not match the association name", "tags": ["ruby-on-rails"]}
+{"question_id": 1988930, "title": "Rails tagging and tag list", "tags": ["ruby-on-rails"]}
+{"question_id": 1988937, "title": "Find the closest number in a list of numbers", "tags": ["c#", "algorithm"]}
+{"question_id": 1988986, "title": "What is the best way to organize unobtrusive JavaScript across multiple pages?", "tags": ["javascript", "ruby-on-rails"]}
+{"question_id": 1988999, "title": "VB.NET - ThreadPool and delegate in c# to VB.NET", "tags": ["c#", "vb.net", "silverlight"]}
+{"question_id": 1989086, "title": "What is bindtextdomain, textdomain in gettext?", "tags": ["php"]}
+{"question_id": 1989100, "title": "Databases: Making a Log of actions, how to handle various references?", "tags": ["mysql", "database"]}
+{"question_id": 1989109, "title": "SQL Execute Insert or Update based if the Data is already in the Table", "tags": ["sql"]}
+{"question_id": 1989119, "title": "I'm having trouble with retrieving information from an XML file using .Descendant", "tags": ["c#", "xml"]}
+{"question_id": 1989125, "title": "Pump Messages During Long Operation", "tags": ["c#"]}
+{"question_id": 1989154, "title": "Does Ruby share PHP's multibyte string problem?", "tags": ["php", "ruby", "string"]}
+{"question_id": 1989158, "title": "My application won't launch giving me some random error error when I haven't touched anything", "tags": ["c#", "wpf"]}
+{"question_id": 1989285, "title": "Which collation should I use when my entire application goes for UTF-8?", "tags": ["mysql"]}
+{"question_id": 1989299, "title": "Resolving wrapper classes in C# with the Unity IoC container", "tags": ["c#"]}
+{"question_id": 1989312, "title": "problem with moving picturebox", "tags": ["c#"]}
+{"question_id": 1989325, "title": "Act as ferret doesn't show results, problem with index", "tags": ["ruby-on-rails"]}
+{"question_id": 1989344, "title": "Objective-C: When to know that you are abusing the SIngleton method of Global Variables", "tags": ["objective-c", "oop"]}
+{"question_id": 1989346, "title": "what is a sharepoint data layer?", "tags": ["sharepoint"]}
+{"question_id": 1989419, "title": "Eclipse: is there a way to get Eclipse to output the commands given to run your program?", "tags": ["java", "eclipse"]}
+{"question_id": 1989446, "title": "Email server that supports .NET plugins that can do actions according to email content", "tags": [".net", "windows"]}
+{"question_id": 1989456, "title": "Silveright image source on web not showing anything", "tags": ["silverlight", "http", "image"]}
+{"question_id": 1989460, "title": "How can I load an ASP.NET GridView from multiple sources asynchronously?", "tags": ["c#", "asp.net", "multithreading"]}
+{"question_id": 1989571, "title": "building a high scale java app, what stack would you use?", "tags": ["java", "spring"]}
+{"question_id": 1989572, "title": "Are you sure you want to delete?", "tags": ["jquery"]}
+{"question_id": 1989595, "title": "Is there a view for a button bar? (Image link describing the view)", "tags": ["android"]}
+{"question_id": 1989600, "title": "Matching usernames in a memberlist using regex", "tags": ["regex"]}
+{"question_id": 1989609, "title": "Button to show virtual keyboard?", "tags": ["android"]}
+{"question_id": 1989626, "title": "Facebook FBML issue - req-choice required as part of request-form content?", "tags": ["facebook"]}
+{"question_id": 1989649, "title": "How do I get Java to use my multi-core processor with GZIPInputStream?", "tags": ["java"]}
+{"question_id": 1989662, "title": "What happens if your asp.net app is using too much memory?", "tags": ["asp.net"]}
+{"question_id": 1989738, "title": "Does the token generated by Google's AuthSub change when a user logs into your application for the 2nd or 3rd time?", "tags": ["authentication"]}
+{"question_id": 1989758, "title": "Help with understanding usage of Value Objects in Flex", "tags": ["php", "apache-flex", "actionscript-3"]}
+{"question_id": 1989779, "title": "Image resize,crop with gd afresh every time or caching?", "tags": ["php", "image"]}
+{"question_id": 1989783, "title": "How is it possible to access memory of other processes?", "tags": ["security", "winapi"]}
+{"question_id": 1989843, "title": "why my code error,I would like to print the parameters of two functions", "tags": ["python"]}
+{"question_id": 1989902, "title": "In Gtk#, how do I reset a timer that was set with GLib.Timeout.Add?", "tags": ["c#"]}
+{"question_id": 1989918, "title": "Is it possible to update the name of each checkbox in an html table using jquery", "tags": ["javascript", "jquery", "html", "asp.net-mvc"]}
+{"question_id": 1989921, "title": "Html Helper Not Working on nested Site Master page", "tags": ["html", "asp.net-mvc"]}
+{"question_id": 1989933, "title": "Looking for recommendations for a syntaxhighlighter (multilanguage support if possible)", "tags": ["asp.net"]}
+{"question_id": 1989959, "title": "Update cookies for Facebook connect based site?", "tags": ["php", "cookies", "facebook", "authentication"]}
+{"question_id": 1990004, "title": "How can I add extra partial views, depending on a dropdownlist selection, in ASP.NET MVC and jQuery?", "tags": ["c#", "jquery", "asp.net-mvc"]}
+{"question_id": 1990012, "title": "Daemon writing output to file twice instead of once in C++", "tags": ["c++", "file"]}
+{"question_id": 1990035, "title": "ASP.NET databinding: how to delete the item", "tags": ["asp.net", "data-binding"]}
+{"question_id": 1990186, "title": "Problem with jQuery index()", "tags": ["jquery"]}
+{"question_id": 1990199, "title": "Custom NSWindow drawing", "tags": ["objective-c", "cocoa"]}
+{"question_id": 1990225, "title": "Finding an elements XPath using IE Developer tool", "tags": ["internet-explorer"]}
+{"question_id": 1990232, "title": "is '__all__' only for 'from some import *'", "tags": ["python"]}
+{"question_id": 1990243, "title": "Given htmlHelper + action name, how to figure out controller name?", "tags": ["asp.net-mvc"]}
+{"question_id": 1990260, "title": "would you use AOP to track points?", "tags": ["java", "spring"]}
+{"question_id": 1990335, "title": "markItUp for Wordpress widget", "tags": ["jquery", "ajax"]}
+{"question_id": 1990357, "title": "How can I handle HTTP redirects in my Perl application?", "tags": ["perl", "http"]}
+{"question_id": 1990366, "title": "Port knocking and RSA encryption", "tags": ["python"]}
+{"question_id": 1990409, "title": "search multiple php files, and replace text?", "tags": ["linux"]}
+{"question_id": 1990435, "title": "Mysql query won't ORDER BY date", "tags": ["php", "sql", "mysql"]}
+{"question_id": 1990464, "title": "Efficiency of purely functional programming", "tags": ["algorithm", "performance"]}
+{"question_id": 1990565, "title": "getting items from a SimpleXMLElement object", "tags": ["php", "xml", "arrays"]}
+{"question_id": 1990576, "title": "how can we decrypting 128 bit AES encrypted text in php with cipher mode ECB and padding mode PKCS7", "tags": ["php"]}
+{"question_id": 1990586, "title": "Flipping UIView inside UIScrollView", "tags": ["iphone"]}
+{"question_id": 1990595, "title": "Array count values", "tags": ["php"]}
+{"question_id": 1990597, "title": "Add my site logo to google check out page", "tags": ["php", "javascript"]}
+{"question_id": 1990635, "title": "How to get Python error as C string?", "tags": ["python", "string"]}
+{"question_id": 1990636, "title": "Problem with Atomic operations on a intel XScale(ARM) processor - XScale-IXP42x Family - c++", "tags": ["c++"]}
+{"question_id": 1990639, "title": "app could not be verified alert", "tags": ["iphone"]}
+{"question_id": 1990643, "title": "Access to non-current-user sessions data in PHP", "tags": ["php"]}
+{"question_id": 1990645, "title": "general boost asio stream reads question", "tags": ["c++"]}
+{"question_id": 1990659, "title": "Should I provide an x64 build of my application?", "tags": ["windows"]}
+{"question_id": 1990734, "title": "Hashcode and equals", "tags": ["java"]}
+{"question_id": 1990748, "title": "Is there a \"for xml path\" equivalent in LINQ to SQL?", "tags": ["c#", "sql", "linq-to-sql"]}
+{"question_id": 1990763, "title": "Hacking the NSDocument architecture", "tags": ["objective-c", "cocoa"]}
+{"question_id": 1990796, "title": "SPItemEventReceiver Context SiteId/WebUrl Incorrect", "tags": ["c#", "sharepoint"]}
+{"question_id": 1990797, "title": "What style to use when naming types in C", "tags": ["c"]}
+{"question_id": 1990826, "title": "Autosizing relative to content view, not superview?", "tags": ["iphone"]}
+{"question_id": 1990839, "title": "In web-based applications, using a data reader or a data table as a place for holding data gathered from DB?", "tags": ["database"]}
+{"question_id": 1990846, "title": "Highligh a cell in a gridview", "tags": ["asp.net"]}
+{"question_id": 1990857, "title": "Hide the value in textbox", "tags": ["html"]}
+{"question_id": 1990907, "title": "Is there a compression utility that will just compress the same file without creating a new one?", "tags": ["php"]}
+{"question_id": 1990917, "title": "What kind of API response does this script produce?", "tags": ["php"]}
+{"question_id": 1990977, "title": "MySQL AVG function for recent 15 records by date (order date desc) in every symbol", "tags": ["sql", "mysql"]}
+{"question_id": 1991022, "title": "Sorting problem with the Google App Engine", "tags": ["python", "google-app-engine"]}
+{"question_id": 1991065, "title": "Role of C,C++,python,perl in Web development", "tags": ["c++", "python", "c", "perl"]}
+{"question_id": 1991127, "title": "Open a popup browser window to select a record", "tags": ["php", "jquery", "html", "ajax", "json"]}
+{"question_id": 1991221, "title": "Is android registration necessery for development of android application?", "tags": ["android"]}
+{"question_id": 1991275, "title": "Save Web Images to Sqlite", "tags": ["iphone", "sqlite"]}
+{"question_id": 1991350, "title": "general UITableView Question (switch Content of a TableView...)", "tags": ["iphone"]}
+{"question_id": 1991377, "title": "code for logging into facebook", "tags": [".net"]}
+{"question_id": 1991427, "title": "Server push: comet vs ape?", "tags": ["javascript", "jquery", "ajax"]}
+{"question_id": 1991429, "title": "Displaying row index in an NSTableView bound to NSArrayController", "tags": ["cocoa"]}
+{"question_id": 1991468, "title": "Is there any way to create a form with formtastic without a model?", "tags": ["ruby-on-rails"]}
+{"question_id": 1991474, "title": "How can I call a method in a running Perl process from another process?", "tags": ["perl"]}
+{"question_id": 1991554, "title": "What exactly is java server faces?", "tags": ["java", "asp.net"]}
+{"question_id": 1991567, "title": "Attach window to running application", "tags": ["user-interface", "winapi"]}
+{"question_id": 1991587, "title": "Help me fix a Delphi function that counts Registry items", "tags": ["delphi"]}
+{"question_id": 1991591, "title": "how to notify my application when show desktop/minimize all/ all windows minimized?", "tags": ["c#"]}
+{"question_id": 1991615, "title": "Encoding problem", "tags": ["java", "xml"]}
+{"question_id": 1991670, "title": "What kind of loop is for (;;)?", "tags": ["c"]}
+{"question_id": 1991672, "title": "Most efficient way to process arguments from the command-line in prefix notation", "tags": ["ruby"]}
+{"question_id": 1991716, "title": "Getting four bytes from a byte array in VB.NET", "tags": [".net", "vb.net", "arrays"]}
+{"question_id": 1991742, "title": "Variable argument lists in C functions - How to properly iterate through the arg list?", "tags": ["c"]}
+{"question_id": 1991743, "title": "How does Django + mod_wsgi affect the python path?", "tags": ["python", "django", "apache"]}
+{"question_id": 1991821, "title": "TortoiseSVN checkout problem in Windows", "tags": ["svn", "xcode"]}
+{"question_id": 1991853, "title": "I want show plain text in the password field and then make it a regular password field on focus in asp.net login page", "tags": ["asp.net"]}
+{"question_id": 1991918, "title": "Regex for doubling single quotes in string", "tags": ["sql", "regex"]}
+{"question_id": 1991928, "title": "CMD: Fails with %1", "tags": ["windows"]}
+{"question_id": 1991930, "title": "How to append elements inside an anchor tag and enclosing a word using Jquery?", "tags": ["jquery"]}
+{"question_id": 1991943, "title": "Is this a bug in ASP.NET Model binding?", "tags": ["c#", ".net", "asp.net-mvc"]}
+{"question_id": 1992042, "title": "Count number of times a date is in DB", "tags": ["sql"]}
+{"question_id": 1992053, "title": "How to use a key and secret for verification?", "tags": ["php"]}
+{"question_id": 1992069, "title": "How come sometimes images wont show when using the full path?", "tags": ["php", "html"]}
+{"question_id": 1992077, "title": "CSS and javascript files not resolving after migrating app to Win 7 dev machine", "tags": ["asp.net", "javascript", "css"]}
+{"question_id": 1992116, "title": "How to compile .sln with cmd.exe", "tags": ["visual-studio-2008"]}
+{"question_id": 1992142, "title": "html Modal popup", "tags": ["html"]}
+{"question_id": 1992183, "title": "How to hide the .html extension with Apache mod_rewrite", "tags": ["apache"]}
+{"question_id": 1992216, "title": "Logging from SpringMVC controller", "tags": ["java"]}
+{"question_id": 1992237, "title": "Rendering view of controller in another controller in Rails", "tags": ["ruby-on-rails"]}
+{"question_id": 1992239, "title": "Python soap using soaplib (server) and suds (client)", "tags": ["python"]}
+{"question_id": 1992246, "title": "Convert powerpoint to flash", "tags": ["flash", "actionscript-3"]}
+{"question_id": 1992255, "title": "fire both blur and focus tightly coupled?", "tags": ["java"]}
+{"question_id": 1992313, "title": "In java, what time is the start of the day?", "tags": ["java"]}
+{"question_id": 1992410, "title": "2 IP addresses for 1 website", "tags": ["php"]}
+{"question_id": 1992430, "title": "Need solution for troubled null problem", "tags": ["c#", "linq-to-sql"]}
+{"question_id": 1992597, "title": "Twitter Search - Multiple searches based on CSV in Text file", "tags": ["php"]}
+{"question_id": 1992608, "title": "Implementing a Leaderboard", "tags": ["ruby-on-rails"]}
+{"question_id": 1992614, "title": "It is taking too much time to run my application in eclipse", "tags": ["java", "eclipse"]}
+{"question_id": 1992629, "title": "Unit testing custom model binder in ASP.NET MVC 2", "tags": ["asp.net-mvc"]}
+{"question_id": 1992767, "title": "html making table borders invisible", "tags": ["html"]}
+{"question_id": 1992800, "title": "MYSQL Query: extract all records that have SSCF in the LicenseNumber", "tags": ["mysql"]}
+{"question_id": 1992816, "title": "How to handle seg faults under Windows?", "tags": ["windows"]}
+{"question_id": 1992827, "title": "mysql compare table values", "tags": ["php", "mysql"]}
+{"question_id": 1992901, "title": "Timer Class in ASP.NET", "tags": ["asp.net"]}
+{"question_id": 1992906, "title": "Why It is not possible to serialize PHP built-in objects?", "tags": ["php"]}
+{"question_id": 1992935, "title": "Mouse pointer plug in", "tags": ["css", "internet-explorer"]}
+{"question_id": 1993014, "title": "Passing **kwargs to Django Form", "tags": ["django"]}
+{"question_id": 1993041, "title": "Using the magic of LINQ - How to call a delegate for each criteria that matches?", "tags": ["linq"]}
+{"question_id": 1993232, "title": "Browsing the JDK docs more efficiently", "tags": ["java"]}
+{"question_id": 1993297, "title": "Cygwin port not working => exits immediately on launch", "tags": ["c++", "windows", "linux"]}
+{"question_id": 1993312, "title": "PHP Switching between two variables equally without using database", "tags": ["php"]}
+{"question_id": 1993321, "title": "What are the best tools for Loose Coupling in C#", "tags": ["c#"]}
+{"question_id": 1993348, "title": "GUI Design - ComboBoxes Versus Lists or RadioButtons", "tags": ["user-interface"]}
+{"question_id": 1993354, "title": "asp mvc: database calls and caching, introducing a 4th entity?", "tags": ["asp.net-mvc"]}
+{"question_id": 1993389, "title": "How to use jint with XNA to build a game engine?", "tags": ["c#"]}
+{"question_id": 1993402, "title": "python hebrew input\\filesytem format", "tags": ["python"]}
+{"question_id": 1993415, "title": "Does LinqDataSource perform Server-Side paging by default?", "tags": ["linq"]}
+{"question_id": 1993423, "title": "What is run_once in ruby?", "tags": ["ruby"]}
+{"question_id": 1993571, "title": "itoa recursively", "tags": ["c"]}
+{"question_id": 1993598, "title": "Change UITextField background when editing begins", "tags": ["iphone", "objective-c"]}
+{"question_id": 1993604, "title": "How can I force cherrypy to accept a variable number of GET parameters?", "tags": ["python"]}
+{"question_id": 1993629, "title": "vb.net problems posting to web form", "tags": ["vb.net", "cookies"]}
+{"question_id": 1993755, "title": "Is there an easy way to disable Zend_Form errors?", "tags": ["php"]}
+{"question_id": 1993767, "title": "Shrink ListBox on item selection", "tags": ["wpf"]}
+{"question_id": 1993790, "title": "iPhone UIButton buttonType always evaluates to 0?", "tags": ["iphone"]}
+{"question_id": 1993796, "title": "How do I reference a Perl hash in an array in a hash?", "tags": ["arrays", "perl"]}
+{"question_id": 1993834, "title": "how change int to binary. on python 2.5", "tags": ["python"]}
+{"question_id": 1993840, "title": "Map list onto dictionary", "tags": ["python"]}
+{"question_id": 1993852, "title": "Rotating an image with the mouse", "tags": ["image"]}
+{"question_id": 1993865, "title": "Connect to Matlab engine from C in Linux", "tags": ["c", "linux"]}
+{"question_id": 1993900, "title": "Should I use DOM-ready functions if my scripts are at the end of the body?", "tags": ["javascript", "jquery"]}
+{"question_id": 1993942, "title": "How to sort hashmap?", "tags": ["java"]}
+{"question_id": 1993977, "title": "iPhone: core data error: +entityForName: could not locate an NSManagedObjectModel for entity name 'Name'", "tags": ["iphone"]}
+{"question_id": 1993996, "title": "What is the real reason for Ruby class names being capitalised?", "tags": ["ruby", "class"]}
+{"question_id": 1994004, "title": "SQL Server Analysis Services - Do I have it?", "tags": ["sql-server"]}
+{"question_id": 1994036, "title": "Custom Id column in the Fluent NH entity name", "tags": ["nhibernate"]}
+{"question_id": 1994065, "title": "One to many relationship in ROR using Formtastic", "tags": ["ruby-on-rails", "ruby"]}
+{"question_id": 1994118, "title": "Monitoring UINavigation stack", "tags": ["iphone", "objective-c"]}
+{"question_id": 1994121, "title": "What is the best practice to restrict off and on times in a database?", "tags": ["mysql"]}
+{"question_id": 1994131, "title": "\"Nested functions are disabled, use -fnested-functions to re-enable\"", "tags": ["objective-c", "xcode"]}
+{"question_id": 1994136, "title": "Sorting NSStrings of Numbers", "tags": ["objective-c", "iphone"]}
+{"question_id": 1994143, "title": "incremental backups on SQL Server and mysql", "tags": ["sql", "mysql", "sql-server"]}
+{"question_id": 1994203, "title": "IE7 glitch with appendChild() for an input box", "tags": ["javascript", "forms"]}
+{"question_id": 1994255, "title": "How to write console output to a txt file", "tags": ["java"]}
+{"question_id": 1994258, "title": "Resolving ambiguous calls in C++ with namespaces", "tags": ["c++"]}
+{"question_id": 1994333, "title": "Session class in NetBeans IDE6.7", "tags": ["java"]}
+{"question_id": 1994380, "title": "Substantial Android development in Scala", "tags": ["android"]}
+{"question_id": 1994411, "title": "when to use a format file for bulk copy program (bcp)", "tags": ["sql-server"]}
+{"question_id": 1994433, "title": "Nhibernate Cascade", "tags": [".net", "nhibernate"]}
+{"question_id": 1994463, "title": "How to cherry pick a range of commits and merge into another branch?", "tags": ["git"]}
+{"question_id": 1994486, "title": "UISharedApplication bug that cannot be determined", "tags": ["iphone", "objective-c"]}
+{"question_id": 1994488, "title": "Copy file or directories recursively in Python", "tags": ["python"]}
+{"question_id": 1994495, "title": "connectionDidFinishLoading - how to force update UIView?", "tags": ["iphone"]}
+{"question_id": 1994505, "title": "a div above another?", "tags": ["jquery", "html", "css", "ajax"]}
+{"question_id": 1994528, "title": "Should we migrate from svn to Team Foundation Server 2010?", "tags": ["svn"]}
+{"question_id": 1994585, "title": "reloading page content with <select> php ajax", "tags": ["php"]}
+{"question_id": 1994610, "title": "What does this mean in php.ini?", "tags": ["php"]}
+{"question_id": 1994646, "title": "object disappears after move in flex 3", "tags": ["apache-flex"]}
+{"question_id": 1994650, "title": "looking for asp.net navigation menu editor with source code", "tags": ["asp.net"]}
+{"question_id": 1994658, "title": "Locale-independent strtod implementation", "tags": ["c", "string"]}
+{"question_id": 1994729, "title": "a sql question about linking tables", "tags": ["sql", "mysql"]}
+{"question_id": 1994732, "title": "how to hide the virtual keyboard", "tags": ["android"]}
+{"question_id": 1994752, "title": "Can Android applications examine OS wide context, for example network related?", "tags": ["android"]}
+{"question_id": 1994789, "title": "automatically create a form at runtime based on datasource c#", "tags": ["c#", ".net"]}
+{"question_id": 1994910, "title": "convert Class member callback from __stdcall to DWORD_PTR", "tags": ["c++", "winapi"]}
+{"question_id": 1994914, "title": "LDAP Query with sub result", "tags": ["c#"]}
+{"question_id": 1994925, "title": "Java RMI - client to server call", "tags": ["java"]}
+{"question_id": 1994957, "title": "delete user best practice?", "tags": ["php", "mysql"]}
+{"question_id": 1994969, "title": "Managing animated images in PHP", "tags": ["php"]}
+{"question_id": 1994970, "title": "C++ - Failed loading a data file !", "tags": ["c++", "file"]}
+{"question_id": 1994994, "title": "string manipulation in Java: replace spaces and commas with one comma", "tags": ["java", "android", "string"]}
+{"question_id": 1995004, "title": "Packaging Android resource files within a distributable Jar file", "tags": ["android"]}
+{"question_id": 1995039, "title": "Faster to Compare by Name or Type?", "tags": ["c#"]}
+{"question_id": 1995061, "title": "Flex mouse cursor \"xor\" color", "tags": ["apache-flex"]}
+{"question_id": 1995062, "title": "Why can't I run my OpenGL program outside of Visual Studio?", "tags": ["c++", "visual-studio"]}
+{"question_id": 1995091, "title": "Can anybody explain SQL Server 2005 table size", "tags": ["sql", "sql-server", "sql-server-2005"]}
+{"question_id": 1995102, "title": "Python execution", "tags": ["python"]}
+{"question_id": 1995126, "title": "Invalidating a path from the Django cache recursively", "tags": ["django"]}
+{"question_id": 1995144, "title": "Difficulties with .htaccess and Blocking Specific File Extensions", "tags": ["apache"]}
+{"question_id": 1995153, "title": "What is the best OOP approach to implement the best Category and Products relationship using PHP?", "tags": ["php", "oop"]}
+{"question_id": 1995159, "title": "How can I draw dotted line in flex", "tags": ["apache-flex", "actionscript-3"]}
+{"question_id": 1995172, "title": "Display the minimize and maximize buttons on a sizable tool window?", "tags": ["c#", "winforms"]}
+{"question_id": 1995189, "title": "MySQL stored procedure, handling multiple cursors and query results", "tags": ["sql", "mysql"]}
+{"question_id": 1995286, "title": "if match(g:possibilities, \"using backreferences after the regex in vim\\(script\\)?\")", "tags": ["regex"]}
+{"question_id": 1995292, "title": "Android database crashes NullPointerException", "tags": ["database", "android", "sqlite"]}
+{"question_id": 1995295, "title": "Detect encoding of RTF document in Java", "tags": ["java"]}
+{"question_id": 1995301, "title": "Pros and Cons of Listener/Observer approaches to notify Model changes", "tags": ["iphone", "objective-c"]}
+{"question_id": 1995302, "title": "GAE/J Low-level API: FetchOptions usage", "tags": ["google-app-engine"]}
+{"question_id": 1995328, "title": "Are there any better methods to do permutation of string?", "tags": ["c++", "algorithm", "string"]}
+{"question_id": 1995354, "title": "Telerik GridNumericColumn direction problem", "tags": ["c#", "asp.net", "html", "css"]}
+{"question_id": 1995362, "title": "looking for transpiler: php to javascript", "tags": ["javascript", "php"]}
+{"question_id": 1995388, "title": "C# void ReceiveData(IAsyncResult iar)", "tags": ["c#", "sockets"]}
+{"question_id": 1995419, "title": "tweetboard effect sliding frame", "tags": ["jquery"]}
+{"question_id": 1995461, "title": "Open text file read comma separated values", "tags": ["php"]}
+{"question_id": 1995492, "title": "can anyone determine why the Jquery ui tabs events are not firing in the below code", "tags": ["jquery"]}
+{"question_id": 1995517, "title": "Hudson git doesn't merge into master", "tags": ["git"]}
+{"question_id": 1995527, "title": "How might I create and use a WebBrowser control on a worker thread?", "tags": ["c#", "multithreading"]}
+{"question_id": 1995553, "title": "height: auto; doesn't work with firefox", "tags": ["html", "css"]}
+{"question_id": 1995554, "title": "An Optimum 2D Data Structure", "tags": ["c++", "algorithm"]}
+{"question_id": 1995647, "title": "sending and receiving files with PHP jQuery", "tags": ["php"]}
+{"question_id": 1995650, "title": "Checking \"Client-only Framework subset\" in C# project properties have no effect (VS2008), is this normal?", "tags": [".net", "visual-studio-2008"]}
+{"question_id": 1995708, "title": "php mssql_query() fail without any error and only when selecting a particular table", "tags": ["php", "sql"]}
+{"question_id": 1995720, "title": "Why can't I send mail with Perl's Net::SMTP?", "tags": ["perl"]}
+{"question_id": 1995738, "title": "Rails: Why does the model method not work?", "tags": ["ruby-on-rails"]}
+{"question_id": 1995869, "title": "How to set project wide #define in C#", "tags": ["c#", "visual-studio"]}
+{"question_id": 1995878, "title": "Having Entity Framework trouble", "tags": ["c#", ".net", "asp.net-mvc"]}
+{"question_id": 1995902, "title": "JQuery hover function causes my div to hide", "tags": ["javascript", "jquery"]}
+{"question_id": 1996097, "title": "Facebook create event", "tags": ["php", "facebook"]}
+{"question_id": 1996184, "title": "All Possible combination for an HEX Value from a given set of chars", "tags": ["python"]}
+{"question_id": 1996192, "title": "Enabling display_errors from inside code", "tags": ["php"]}
+{"question_id": 1996207, "title": "Treeview checked nodes not returned in order", "tags": ["asp.net"]}
+{"question_id": 1996209, "title": "How to restart Interbase", "tags": ["delphi"]}
+{"question_id": 1996234, "title": "Json + java, cannot get an item", "tags": ["java", "json"]}
+{"question_id": 1996256, "title": "What happens does resume next at the end of the code stands for in vba?", "tags": ["excel"]}
+{"question_id": 1996275, "title": "ASP VB .NET SqlDataSource Update Error Fails", "tags": ["asp.net"]}
+{"question_id": 1996305, "title": "URL regex in django with limited set of words", "tags": ["regex", "django"]}
+{"question_id": 1996458, "title": "Page refresh and bind not working", "tags": ["asp.net"]}
+{"question_id": 1996484, "title": "IE and Chrome not executing unexpected javascript that comes up during runtime", "tags": ["javascript", "internet-explorer"]}
+{"question_id": 1996496, "title": "Eclipse FTP \"Team Plugin\"", "tags": ["eclipse"]}
+{"question_id": 1996518, "title": "Retrieving the output of subprocess.call()", "tags": ["python"]}
+{"question_id": 1996566, "title": "Help with SELECT statement", "tags": ["sql", "mysql"]}
+{"question_id": 1996633, "title": "How to import data to Core data", "tags": ["objective-c"]}
+{"question_id": 1996641, "title": "ABPersonViewController - callback from \"Edit\" button - objective C", "tags": ["objective-c", "iphone"]}
+{"question_id": 1996650, "title": "IntelliJ 9 and appengine. Library shows in the settings, but, does not get packaged to the exploded war artifact that intelliJ creates", "tags": ["google-app-engine"]}
+{"question_id": 1996658, "title": "Fast multiplication of very large integers", "tags": ["c#", "java"]}
+{"question_id": 1996666, "title": "Determining how big an element will be in Javascript", "tags": ["javascript", "jquery"]}
+{"question_id": 1996680, "title": "Reference function or create a new function that only calls another?", "tags": ["python"]}
+{"question_id": 1996695, "title": "flashdevelop is not finding my png file", "tags": ["flash", "actionscript-3"]}
+{"question_id": 1996699, "title": "TSQL in SQL 2005: Query", "tags": ["sql", "sql-server", "sql-server-2005"]}
+{"question_id": 1996700, "title": "jQuery: append form input", "tags": ["jquery", "forms"]}
+{"question_id": 1996748, "title": "Passing bytes to \"ParentClass\" in vb.net", "tags": [".net", "vb.net", "class"]}
+{"question_id": 1996783, "title": "How can I filter different things according to a class attribute?", "tags": ["c#", "wpf", "xml"]}
+{"question_id": 1996833, "title": "Calculating EXIF exposure time as a fraction (Delphi)", "tags": ["delphi", "math"]}
+{"question_id": 1996867, "title": "Controlling access to output in multi-threaded applications", "tags": ["c++", "multithreading"]}
+{"question_id": 1996870, "title": "jQuery qTip: How to attach a single tooltip div to multiple target divs?", "tags": ["jquery"]}
+{"question_id": 1996934, "title": "In PHP, what is the difference between hash and mhash?", "tags": ["php"]}
+{"question_id": 1996953, "title": "Refactoring Javascript", "tags": ["javascript", "jquery", "ajax"]}
+{"question_id": 1996959, "title": "Loose coupling : Can we use Interfaces when we need cloneables params?", "tags": ["java"]}
+{"question_id": 1996975, "title": "How can one \"scan\" a lambda expression in C#?", "tags": ["c#", ".net", "linq"]}
+{"question_id": 1997015, "title": "Add class in java", "tags": ["java"]}
+{"question_id": 1997089, "title": "How to Slow down the browser", "tags": ["javascript", "performance"]}
+{"question_id": 1997154, "title": "Sending a password unencrypted over the Internet", "tags": ["security"]}
+{"question_id": 1997200, "title": "Magento -> How can I list products with same multiple select attribute?", "tags": ["php"]}
+{"question_id": 1997235, "title": "How can I load data on a page based on this being added into the URL #a=1380369&i=23007472", "tags": ["php", "javascript", "jquery"]}
+{"question_id": 1997238, "title": "Java regex dies on stack overflow: need a better version", "tags": ["java", "regex"]}
+{"question_id": 1997298, "title": "UITextField leftView", "tags": ["iphone"]}
+{"question_id": 1997325, "title": "IE CSS DIsplay Issue", "tags": ["html", "css"]}
+{"question_id": 1997327, "title": "Python webbrowser.open() - setting new=0 to open in the same browser window doesn't work", "tags": ["python"]}
+{"question_id": 1997335, "title": "default URL for a model in rails?", "tags": ["ruby-on-rails"]}
+{"question_id": 1997383, "title": "Why there save and load file code works on iphone simulator but failed on device", "tags": ["iphone"]}
+{"question_id": 1997387, "title": "Delphi: How do i know what my property editor is editing?", "tags": ["delphi"]}
+{"question_id": 1997433, "title": "How to use scala.None from Java code", "tags": ["java"]}
+{"question_id": 1997498, "title": "Strings and string builder", "tags": [".net", "string"]}
+{"question_id": 1997509, "title": "How do I output these PHP array values?", "tags": ["php", "arrays"]}
+{"question_id": 1997511, "title": "PHP Uploads Limit for Scanning?", "tags": ["php"]}
+{"question_id": 1997518, "title": "How do I install Ruby Shoes?", "tags": ["ruby", "user-interface"]}
+{"question_id": 1997537, "title": "loading edit form only if GET var exists in database", "tags": ["php", "mysql", "forms"]}
+{"question_id": 1997540, "title": "MySQL VARCHAR Lengths and UTF-8", "tags": ["mysql"]}
+{"question_id": 1997612, "title": "Should we use server-side solution in place of javascript as much as possible for multi-device viewing?", "tags": ["javascript", "css"]}
+{"question_id": 1997703, "title": "Android listview/navigation based app", "tags": ["java", "android", "eclipse"]}
+{"question_id": 1997718, "title": "Difference between java.exe and javaw.exe", "tags": ["java", "swing"]}
+{"question_id": 1997722, "title": "SSIS Package failed", "tags": ["sql-server-2005"]}
+{"question_id": 1997750, "title": "Cosine Similarity", "tags": ["java"]}
+{"question_id": 1997751, "title": "c gcc compiler options for pointer arithmetic warning", "tags": ["c"]}
+{"question_id": 1997774, "title": "jquery selector problem", "tags": ["jquery"]}
+{"question_id": 1997778, "title": "C++ comparing c string troubles", "tags": ["c++", "string"]}
+{"question_id": 1997801, "title": "C# storing data in data structure", "tags": ["c#"]}
+{"question_id": 1997806, "title": "what is the use of character stream in java?", "tags": ["java", "oop"]}
+{"question_id": 1997825, "title": "What are the faster Paxos-related algorithms for consensus in distributed systems?", "tags": ["algorithm"]}
+{"question_id": 1997894, "title": "Python's mechanize proxy support", "tags": ["python"]}
+{"question_id": 1997905, "title": "How to open a folder?", "tags": ["cocoa"]}
+{"question_id": 1997994, "title": "how to print the content of a label or panel in asp.net?", "tags": ["c#", "javascript"]}
+{"question_id": 1997998, "title": "Insert Data Into Tables Linked by Foreign Key", "tags": ["sql"]}
+{"question_id": 1997999, "title": "How to use generics with overloading?", "tags": ["c#"]}
+{"question_id": 1998002, "title": "Recursion in Linked List", "tags": ["c++"]}
+{"question_id": 1998133, "title": "How does ADO.NET store dates and time?", "tags": ["sql", "datetime"]}
+{"question_id": 1998179, "title": "Passing large amounts of Template Code into a variable?", "tags": ["ruby-on-rails"]}
+{"question_id": 1998210, "title": "Strategy for external javascript framework debugging", "tags": ["javascript", "debugging"]}
+{"question_id": 1998217, "title": "what is stored in cookies", "tags": ["cookies"]}
+{"question_id": 1998286, "title": "Accessing a rails test server remotely", "tags": ["ruby-on-rails"]}
+{"question_id": 1998342, "title": "implementaion independent communication within a process", "tags": ["java", "multithreading"]}
+{"question_id": 1998483, "title": "listView dynamic add item", "tags": ["android"]}
+{"question_id": 1998553, "title": "Move an object from point A to point B", "tags": ["objective-c"]}
+{"question_id": 1998560, "title": "ROW_NUMBER() and nhibernate - finding an item's page", "tags": ["nhibernate"]}
+{"question_id": 1998562, "title": "How to create an SVN pre-commit hook to unzip a file into a directory before commiting to the repository", "tags": ["svn"]}
+{"question_id": 1998591, "title": "loading a Navigation Controller from a button", "tags": ["iphone"]}
+{"question_id": 1998630, "title": "Jquery png problem in IE", "tags": ["jquery"]}
+{"question_id": 1998664, "title": "ASP.Net Page abstraction", "tags": ["asp.net"]}
+{"question_id": 1998673, "title": "Logging Key and Mouse events in java", "tags": ["java", "events"]}
+{"question_id": 1998684, "title": "AES encryption problem in Debug and Release mode", "tags": ["c++", "visual-studio-2008"]}
+{"question_id": 1998722, "title": "What are all the disdvantages of using Cache in aspnet?", "tags": ["c#", "asp.net"]}
+{"question_id": 1998735, "title": "Dynamic object literal in javascript?", "tags": ["javascript"]}
+{"question_id": 1998749, "title": "uiTabBar - use for menu NOT view control? (iPhone)", "tags": ["iphone"]}
+{"question_id": 1998760, "title": "Is there any Graphic tool to Localize strings in Objective-C?", "tags": ["objective-c"]}
+{"question_id": 1998783, "title": "SWT TrayItem Mouse listener", "tags": ["java"]}
+{"question_id": 1998784, "title": "Programmatically Updating a document library in Sharepoint", "tags": ["sharepoint", "events"]}
+{"question_id": 1998952, "title": "ASP.NET: Proper implementation of nested API calls using connection pool and nested transactions", "tags": ["c#", "asp.net"]}
+{"question_id": 1998962, "title": "sqlalchemy cascade and association objects", "tags": ["python"]}
+{"question_id": 1998969, "title": "PlaceHolderMain in Sharepoint showing breadcrumb and title", "tags": ["sharepoint"]}
+{"question_id": 1998996, "title": "organize HTML inside Javascript functions", "tags": ["javascript", "html"]}
+{"question_id": 1998997, "title": "*Passing a Method into a Class", "tags": ["class"]}
+{"question_id": 1999013, "title": "C#: How can I detect the bitness of an other process... not the current one", "tags": ["c#"]}
+{"question_id": 1999017, "title": "JS date converting", "tags": ["javascript"]}
+{"question_id": 1999049, "title": "c++ identify current thread in function?", "tags": ["c++", "windows", "multithreading"]}
+{"question_id": 1999053, "title": "how to convert arraylist to integer array in c#", "tags": ["c#"]}
+{"question_id": 1999200, "title": "Performing Method on background thread with NSNotification", "tags": ["iphone", "objective-c", "multithreading"]}
+{"question_id": 1999307, "title": "Why do we need to specify class inside <persistence-unit> element?", "tags": ["java", "spring"]}
+{"question_id": 1999318, "title": "Design mode in Visual Studio doesn't ger resources specified with ResolveClientUrl", "tags": ["asp.net"]}
+{"question_id": 1999323, "title": "access to standalone app with more stable database", "tags": ["c#", "sql", "vb.net", "user-interface"]}
+{"question_id": 1999385, "title": "How to get user's OU programmatically with ldap C++", "tags": ["visual-c++"]}
+{"question_id": 1999434, "title": "Handle flex events without using a framework?", "tags": ["apache-flex"]}
+{"question_id": 1999445, "title": "Passing data from one page to other on click of a hyperlink", "tags": ["java"]}
+{"question_id": 1999494, "title": "Doing an atomic update of the first instance in a QuerySet", "tags": ["sql", "django"]}
+{"question_id": 1999515, "title": "Cocoa setAnimationDidStopSelector", "tags": ["iphone", "objective-c"]}
+{"question_id": 1999577, "title": "What are the ways to get a handle on the view amidst recycling?", "tags": ["android", "performance"]}
+{"question_id": 1999581, "title": "Embedded XBAP in IFrame always on top", "tags": ["c#", "asp.net"]}
+{"question_id": 1999639, "title": "Input type=\"file\" server side access", "tags": ["asp.net"]}
+{"question_id": 1999651, "title": "How to rescrict a JavaScript script being inserted in the database with PHP?", "tags": ["php", "javascript", "database"]}
+{"question_id": 1999680, "title": "How can i handle Special characters( =) in XML", "tags": ["xml"]}
+{"question_id": 1999688, "title": "Ajax.BeginForm show loadingElementId when OnBegin return false", "tags": ["asp.net-mvc", "ajax"]}
+{"question_id": 1999724, "title": "Screen Pixel Resolution in mm", "tags": ["c++", "c", "winapi"]}
+{"question_id": 1999729, "title": "freeware .net map component?", "tags": [".net"]}
+{"question_id": 1999736, "title": "Track (all) the events from a Control", "tags": [".net", "visual-studio", "debugging", "events"]}
+{"question_id": 1999775, "title": "cron jobs under mac os 10.6 snow leopard", "tags": ["macos"]}
+{"question_id": 1999781, "title": "javascript: remove all object elements of an associative array", "tags": ["javascript", "arrays"]}
+{"question_id": 1999840, "title": "javascript, circular references and memory leaks", "tags": ["javascript"]}
+{"question_id": 1999917, "title": "Automating Products (with details) Addition", "tags": ["php", "javascript"]}
+{"question_id": 1999918, "title": "How can I configure the jquery ui date field to make it a good date of birth entry?", "tags": ["javascript", "jquery"]}
+{"question_id": 2000065, "title": "Right DBMS for the job?", "tags": ["mysql", "database"]}
+{"question_id": 2000177, "title": "WPF FlowDocument: force calculation of height etc. \"off screen\"", "tags": ["wpf"]}
+{"question_id": 2000323, "title": "\"Noisy\" Logging Problem", "tags": [".net"]}
+{"question_id": 2000332, "title": "What is \"java web start\" used for?", "tags": ["java"]}
+{"question_id": 2000337, "title": "Adding a JavaScript confirmation prompt to a delete command button in an ASP.NET grid view?", "tags": ["c#", "asp.net", "javascript"]}
+{"question_id": 2000375, "title": "When to begin T-SQL query with USE?", "tags": ["database"]}
+{"question_id": 2000610, "title": "How to do locking in SQL Server like MYSQL", "tags": ["mysql", "sql-server"]}
+{"question_id": 2000622, "title": "How to record a serial number in an executable?", "tags": ["c#", "security"]}
+{"question_id": 2000691, "title": "Unable to remove row from table created by jQuery", "tags": ["javascript", "jquery"]}
+{"question_id": 2000722, "title": "How to right align buttons on a HorizontalPanel (GWT)", "tags": ["java"]}
+{"question_id": 2000742, "title": "Which approach should I take in this case?", "tags": ["php"]}
+{"question_id": 2000794, "title": "Strange IIS Windows Authentication behavior", "tags": ["asp.net", "web-services", "authentication"]}
+{"question_id": 2000805, "title": "Syntax error in Ax", "tags": ["visual-studio", "debugging"]}
+{"question_id": 2000808, "title": "Postgres/PHP - What is the standard way to retrieve the ID of an inserted row?", "tags": ["php", "database"]}
+{"question_id": 2000831, "title": "Compare time part of DateTime data type in SQL Server 2005", "tags": ["sql-server", "sql-server-2005"]}
+{"question_id": 2000870, "title": "Tokyo Cabinet cluster and PHP (via memcache)", "tags": ["php"]}
+{"question_id": 2000878, "title": "mysql integer problem", "tags": ["php"]}
+{"question_id": 2000903, "title": "Extending Enumeration Definition in a child class in .NET", "tags": ["c#", ".net", "vb.net", "oop"]}
+{"question_id": 2000905, "title": "Best XSD file generator", "tags": ["xml"]}
+{"question_id": 2000916, "title": "Is there a good base for me to work from for php user registration + subscription in MVC format?", "tags": ["php"]}
+{"question_id": 2000979, "title": "Class or Metaclass Design for Astrodynamics Engine", "tags": ["python", "math", "oop"]}
+{"question_id": 2001120, "title": "flex to red5 v0.9: Client rejected, unscheduling waitForHandshakeJob", "tags": ["apache-flex"]}
+{"question_id": 2001138, "title": "How to create dynamical scoped variables in Python?", "tags": ["python"]}
+{"question_id": 2001149, "title": "Trouble deep-copying a 'List<T>' C#", "tags": ["c#", ".net"]}
+{"question_id": 2001230, "title": "How to work on a Cocoa app and plugins in parallel?", "tags": ["cocoa", "xcode", "git"]}
+{"question_id": 2001264, "title": "“Could not find type” error loading a form in the Designer", "tags": ["c#", ".net"]}
+{"question_id": 2001361, "title": "ComboBox.SelectedValue does not match displayed text when DropDownStyle = DropDownList in Windows 7", "tags": [".net", "winforms", "data-binding"]}
+{"question_id": 2001366, "title": "How can I change the text color with jQuery?", "tags": ["jquery"]}
+{"question_id": 2001439, "title": "Which way to reserve memory for a string?", "tags": ["c"]}
+{"question_id": 2001440, "title": "CSS Overflow Problem in IE6 - Element Does Not Appear/Show Up", "tags": ["css"]}
+{"question_id": 2001565, "title": "Alternative method for NSURLRequest's private \"setAllowsAnyHTTPSCertificate:forHost:\"?", "tags": ["iphone", "cocoa", "cocoa-touch"]}
+{"question_id": 2001575, "title": "Few confusing things about WebControl.Style property", "tags": ["asp.net", "css"]}
+{"question_id": 2001590, "title": "Get a list of available Content Providers", "tags": ["android"]}
+{"question_id": 2001617, "title": "An efficient way to save an Array and its Keys to a database", "tags": ["php", "mysql", "arrays", "performance"]}
+{"question_id": 2001655, "title": "How to move a Shape on Canvas in WPF?", "tags": ["c#", ".net", "wpf"]}
+{"question_id": 2001722, "title": "Cancel a net stream to fms server from flex", "tags": ["apache-flex"]}
+{"question_id": 2001730, "title": "capistrano put() and upload() both failing", "tags": ["ruby-on-rails"]}
+{"question_id": 2001764, "title": "binding datatable to grid view", "tags": ["asp.net"]}
+{"question_id": 2001799, "title": "Create a function to return current date and time in oracle", "tags": ["oracle", "datetime"]}
+{"question_id": 2001827, "title": "Why am I getting this ClassCastException?", "tags": ["java"]}
+{"question_id": 2001870, "title": "How do I get the KeyDown event to fire in a custom container control?", "tags": ["winforms"]}
+{"question_id": 2001895, "title": "Why my binding does not update on UIElement.RenderSize or UIElement.ActualWidth?", "tags": [".net", "silverlight"]}
+{"question_id": 2001902, "title": "jQuery Plugins vs UI vs some alternative", "tags": ["jquery"]}
+{"question_id": 2001946, "title": "Convert SWF to PNG", "tags": ["php", "flash", "image"]}
+{"question_id": 2001969, "title": "double click to open file c#", "tags": ["c#", "file"]}
+{"question_id": 2002163, "title": "jquery Ajax call - data parameters are not being passed to MVC Controller action", "tags": ["javascript", "jquery", "asp.net-mvc", "ajax"]}
+{"question_id": 2002189, "title": "Using custom dependency properties as DataTrigger in WPF", "tags": ["wpf"]}
+{"question_id": 2002193, "title": "Programatically fire windows 7 touch and gesture events", "tags": ["c#", "winforms", "winapi"]}
+{"question_id": 2002288, "title": "Static way to get 'Context' in Android?", "tags": ["android"]}
+{"question_id": 2002313, "title": "Objects in PHP: More or Less is better?", "tags": ["php", "mysql", "datetime"]}
+{"question_id": 2002330, "title": "Implementing Unit Testing with iOS", "tags": ["xcode"]}
+{"question_id": 2002331, "title": "Will using an NSKeyedArchiver/NSCoder persist even after an application update?", "tags": ["iphone"]}
+{"question_id": 2002350, "title": "How do I databind to children of a child object?", "tags": ["wpf", "data-binding"]}
+{"question_id": 2002352, "title": "C# IF /ELSE create directory problem", "tags": ["c#"]}
+{"question_id": 2002384, "title": "Sort definitions list (<dl>)", "tags": ["php"]}
+{"question_id": 2002390, "title": "pydev disappeared when sudo eclipse", "tags": ["eclipse"]}
+{"question_id": 2002401, "title": "this[string name] in Generic Collection", "tags": ["c#"]}
+{"question_id": 2002472, "title": "vector of objects", "tags": ["c++"]}
+{"question_id": 2002476, "title": "Why can HTTP handle only one pending request per socket?", "tags": ["http", "sockets"]}
+{"question_id": 2002481, "title": "xDebug seems OK installed, but not connecting with NetBeans", "tags": ["php", "macos"]}
+{"question_id": 2002497, "title": "Open MySQL slow query log with PHP", "tags": ["php", "mysql"]}
+{"question_id": 2002509, "title": "Is it possible to refresh two lines of text at once using something like a CR? (C++)", "tags": ["c++"]}
+{"question_id": 2002535, "title": "ComboBox to sorted Xml file. Need help to optimize", "tags": ["c#", "xml"]}
+{"question_id": 2002602, "title": "SVN: personal branches for each developer?", "tags": ["svn"]}
+{"question_id": 2002653, "title": "Need advice on how to save all stock changes for rpg game in mysql", "tags": ["php", "mysql"]}
+{"question_id": 2002692, "title": "Clone a row with a primary key in SQL?", "tags": ["c#", "sql-server"]}
+{"question_id": 2002710, "title": "PHP: how to perform htmlspecialchar() on an array-of-arrays?", "tags": ["php", "html", "arrays"]}
+{"question_id": 2002727, "title": "testing django app with legacy database - how to avoid recreating db per test?", "tags": ["database", "django"]}
+{"question_id": 2002745, "title": "Can you return two arguments in objective-c?", "tags": ["objective-c", "xcode"]}
+{"question_id": 2002765, "title": "How do I insert a POST request into a UIWebView", "tags": ["iphone"]}
+{"question_id": 2002769, "title": "simple filter I can add to my controller actions that check authentication", "tags": ["asp.net-mvc"]}
+{"question_id": 2002773, "title": "Permissions issue in SSMS: \"The SELECT permission was denied on the object 'extended_properties', database 'mssqlsystem_resource', ... Error 229)\"", "tags": ["sql-server", "security"]}
+{"question_id": 2002817, "title": "OK to invoke a JS function with more arguments than it formally receives?", "tags": ["javascript"]}
+{"question_id": 2002821, "title": "Why does this subtraction not equal zero?", "tags": ["java", "math"]}
+{"question_id": 2002856, "title": "GQL with two tables", "tags": ["python", "django", "google-app-engine"]}
+{"question_id": 2002864, "title": "Parallel.Foreach spawning way too many threads", "tags": [".net"]}
+{"question_id": 2002869, "title": "ASP.NET security", "tags": ["c#", "asp.net"]}
+{"question_id": 2002896, "title": "Knowledge of windows internals?", "tags": ["windows"]}
+{"question_id": 2002922, "title": "How do I copy a chart image to the clipboard using C#2010?", "tags": ["c#", ".net"]}
+{"question_id": 2002954, "title": "Execute a one-way wcf service operation from powershell", "tags": [".net"]}
+{"question_id": 2002993, "title": "JPA getSingleResult() or null", "tags": ["java"]}
+{"question_id": 2003017, "title": "Space in html can't find it. Safari vs IE & Firefeox", "tags": ["html"]}
+{"question_id": 2003025, "title": "Javascript How do i call functions from an array of function names", "tags": ["javascript"]}
+{"question_id": 2003073, "title": "extracting content of content attribute in meta tag of a website given a specified value for the name attribute with nokogiri in ruby?", "tags": ["ruby"]}
+{"question_id": 2003097, "title": "Is it possible to add a value in MVC2 RC DataTokens collection?", "tags": ["asp.net-mvc"]}
+{"question_id": 2003163, "title": "Image based CSS Dropdown menus", "tags": ["css"]}
+{"question_id": 2003177, "title": "Unix suid bit problem", "tags": ["c"]}
+{"question_id": 2003185, "title": "GetElementById() not finding the tag?", "tags": ["c#", "xml"]}
+{"question_id": 2003194, "title": "HMAC-SHA256 in Delphi", "tags": ["delphi"]}
+{"question_id": 2003207, "title": "How to handle ascii control characters in sql server?", "tags": ["sql-server"]}
+{"question_id": 2003208, "title": "iPhone adding a UITabBar to TableView/NavigationController", "tags": ["iphone"]}
+{"question_id": 2003255, "title": "Why the std::swap of Bits in a std::bitset instance doesn't work?", "tags": ["c++"]}
+{"question_id": 2003306, "title": "ASP.NET MVC 2 RC - client side validation using Data Annotations fails with multiple attributes", "tags": ["javascript", "asp.net-mvc"]}
+{"question_id": 2003339, "title": "Excel Cell Format in JasperReport Report", "tags": ["java", "excel"]}
+{"question_id": 2003371, "title": "Django: Setting context by url's GET", "tags": ["django"]}
+{"question_id": 2003389, "title": "OS FLV Player - Modify Flash Player", "tags": ["flash"]}
+{"question_id": 2003404, "title": "How to install and start a Windows Service under NetworkService account by using WiX?", "tags": ["windows"]}
+{"question_id": 2003445, "title": "While switching view on navigation bar, how to quit NSOperationQueue thread safely without EXC_BAD_ACCESS error", "tags": ["iphone"]}
+{"question_id": 2003448, "title": "How to create an empty jQuery result", "tags": ["javascript", "jquery"]}
+{"question_id": 2003466, "title": "Create product keys for iPhone application? [iPhone SDK]", "tags": ["iphone", "security"]}
+{"question_id": 2003558, "title": "PHP wordpress style related posts", "tags": ["php", "mysql"]}
+{"question_id": 2003637, "title": "Will this foreach copy the values in memory?", "tags": ["php"]}
+{"question_id": 2003648, "title": "CoreData: \"Dangling reference to an invalid object.\" error", "tags": ["iphone", "cocoa-touch"]}
+{"question_id": 2003709, "title": "Guestbook application", "tags": ["google-app-engine"]}
+{"question_id": 2003788, "title": "Learn different Java technologies without GUIs?", "tags": ["java"]}
+{"question_id": 2003805, "title": "Positioning adorner relative to parent's dimensions in WPF", "tags": ["wpf"]}
+{"question_id": 2003817, "title": "google app engine jsonpickle", "tags": ["python", "json", "google-app-engine"]}
+{"question_id": 2003841, "title": "How can I get the current week using Python?", "tags": ["python", "datetime"]}
+{"question_id": 2003859, "title": "where is the '__path__' comes from", "tags": ["python"]}
+{"question_id": 2003863, "title": "Python ftplib: Overwriting a File doesn't work with STOR", "tags": ["python"]}
+{"question_id": 2003885, "title": "Garbage collection with Ruby C Extension", "tags": ["ruby"]}
+{"question_id": 2003890, "title": "Lightweight microbenchmark library with graph output (Java)", "tags": ["java"]}
+{"question_id": 2003945, "title": "What are the best sites to showcase my development skills?", "tags": ["asp.net"]}
+{"question_id": 2003962, "title": "Selecting row on selection of CheckBox in Datagrid", "tags": ["apache-flex"]}
+{"question_id": 2003963, "title": "MSVC and FreeGlut Compiler Error", "tags": ["c++", "visual-c++"]}
+{"question_id": 2004012, "title": "Structure/algorithm for solving game with overlapping cards", "tags": ["algorithm"]}
+{"question_id": 2004089, "title": "When using variable length argument lists (...), can you do anything besides step forward through va_list?", "tags": ["c++"]}
+{"question_id": 2004113, "title": "Wrapping a Non-inheritable class in C#", "tags": ["c#"]}
+{"question_id": 2004118, "title": "ANT: How to \"add\" path elements from one path into a second path?", "tags": ["java"]}
+{"question_id": 2004129, "title": "Creating index just for a query in Oracle 10g", "tags": ["oracle"]}
+{"question_id": 2004130, "title": "How to display a side bar menu", "tags": ["javascript", "html", "css"]}
+{"question_id": 2004197, "title": "Java Coloring a Table row", "tags": ["java"]}
+{"question_id": 2004199, "title": "Finding what methods a LINQ provider supports", "tags": [".net", "linq"]}
+{"question_id": 2004203, "title": "Repairing table in mysql", "tags": ["mysql"]}
+{"question_id": 2004232, "title": "How do I use Google autoload to load JQuery?", "tags": ["jquery", "html"]}
+{"question_id": 2004291, "title": "How can I shorten this linq to sql query?", "tags": ["c#", "linq", "linq-to-sql"]}
+{"question_id": 2004298, "title": "Input field containing double quotes value", "tags": ["php", "html"]}
+{"question_id": 2004344, "title": "How do I handle ImeOptions' done button click?", "tags": ["android"]}
+{"question_id": 2004457, "title": "php output single quotes", "tags": ["php"]}
+{"question_id": 2004522, "title": "Converting ASP.NET MVC to n-Tiered Architecture", "tags": [".net", "asp.net-mvc"]}
+{"question_id": 2004548, "title": "Garbage collection not functioning as expected", "tags": ["c#"]}
+{"question_id": 2004625, "title": "How do I prevent Visual Basic 2008 from automatically indenting namespaces?", "tags": ["vb.net", "visual-studio"]}
+{"question_id": 2004684, "title": "How can i submit inputs located inside the <div style=\"display:none\">?", "tags": ["php", "jquery", "html"]}
+{"question_id": 2004720, "title": "How to add style from code behind?", "tags": ["c#", "asp.net", "css"]}
+{"question_id": 2004820, "title": "Inherit interfaces which share a method name", "tags": ["c++", "visual-c++"]}
+{"question_id": 2004952, "title": "How to set Native Microsoft compiler for VS 2003 if Intel Compiler is default compiler?", "tags": ["c++", "visual-c++"]}
+{"question_id": 2004964, "title": "Refactoring a regular expression check in ruby", "tags": ["ruby", "regex"]}
+{"question_id": 2004968, "title": "Dir exists or not on FTP", "tags": ["c#"]}
+{"question_id": 2004995, "title": "How can JavaScript make new page that contains more JavaScript?", "tags": ["javascript", "html"]}
+{"question_id": 2005015, "title": "Form not working in Internet Explorer", "tags": ["html", "forms"]}
+{"question_id": 2005072, "title": "Creating Javascript History like Object in Coldfusion", "tags": ["java", "javascript"]}
+{"question_id": 2005075, "title": "Add Exception to firewall on Mac either during installation of application or when application is launched", "tags": ["c++", "macos", "qt"]}
+{"question_id": 2005122, "title": "Rendering 20 large identical listBoxes", "tags": ["html"]}
+{"question_id": 2005150, "title": "Why is Django's Meta an old-style class?", "tags": ["python", "django", "class"]}
+{"question_id": 2005176, "title": "Best Practices for Microsoft Message Queue and Resource Release", "tags": ["c#", ".net"]}
+{"question_id": 2005195, "title": "Accessing a javascript object with jQuery", "tags": ["javascript", "jquery"]}
+{"question_id": 2005221, "title": "How to dynamically instantiate a class in Objective-C", "tags": ["iphone", "objective-c"]}
+{"question_id": 2005274, "title": "Free or Open Source Diagramming Component for WinForms", "tags": ["c#", "wpf", "winforms"]}
+{"question_id": 2005286, "title": "returning varchar(MAX) from a function returns truncated string", "tags": ["sql-server-2005"]}
+{"question_id": 2005294, "title": "Copying structure and array", "tags": ["c"]}
+{"question_id": 2005345, "title": "String manipulation in Python", "tags": ["python"]}
+{"question_id": 2005436, "title": "create one UIImage from two UIImageView", "tags": ["iphone", "cocoa-touch"]}
+{"question_id": 2005467, "title": "Regular Expression in Asp.Net", "tags": ["asp.net", "regex"]}
+{"question_id": 2005497, "title": "presentModalViewController problem", "tags": ["iphone"]}
+{"question_id": 2005517, "title": "Is there an API or any other method to automate the submission process?", "tags": ["iphone"]}
+{"question_id": 2005531, "title": "Hibernate computed property and SQL queries", "tags": ["java"]}
+{"question_id": 2005542, "title": "How to get subdirectory from the FTP server?", "tags": ["iphone"]}
+{"question_id": 2005564, "title": "How can I make an existing AJAX form be iPhone compatible?", "tags": ["jquery", "iphone", "html", "ajax", "forms"]}
+{"question_id": 2005570, "title": "What encoding used when invoke fopen or open?", "tags": ["c", "linux"]}
+{"question_id": 2005595, "title": "Changing opacity for div in div - is this possible? How?", "tags": ["css"]}
+{"question_id": 2005601, "title": "Table Structure for Multiple Histrory", "tags": ["sql-server"]}
+{"question_id": 2005623, "title": "Getting the Python PMW module?", "tags": ["python"]}
+{"question_id": 2005625, "title": "Compare DataRow collection to List<T>", "tags": ["c#", "linq"]}
+{"question_id": 2005726, "title": "External Interface not available", "tags": ["flash", "actionscript-3"]}
+{"question_id": 2005747, "title": "\"Could not load type [Namespace].Global\" causing me grief", "tags": ["c#", "asp.net"]}
+{"question_id": 2005757, "title": "Message Dialog Box Reappears After OK button is clicked", "tags": ["java"]}
+{"question_id": 2005777, "title": "Inheriting from a User Control to use a different child Control", "tags": ["c#"]}
+{"question_id": 2005828, "title": "What data structure for O(1) random insertion/deletion and O(1) random access?", "tags": ["c", "performance"]}
+{"question_id": 2005829, "title": "How to load all jquery tabs by default?", "tags": ["jquery"]}
+{"question_id": 2005934, "title": "How can an EJB parallelize a long, CPU intensive process?", "tags": ["java"]}
+{"question_id": 2005980, "title": "Quickly add + to positive strings [PHP]", "tags": ["php"]}
+{"question_id": 2006024, "title": "Using NHibernate transaction in SqlBulkCopy", "tags": ["c#", "sql-server", "nhibernate"]}
+{"question_id": 2006038, "title": "ScriptManager causes server error", "tags": ["asp.net"]}
+{"question_id": 2006064, "title": "PHP Session Class and $_SESSION Array", "tags": ["php", "oop"]}
+{"question_id": 2006114, "title": "Is static caching DatabaseFactory.CreateDatabase acceptable?", "tags": ["asp.net", "database"]}
+{"question_id": 2006139, "title": "exporting oracle database (creating a .sql file of data )", "tags": ["oracle"]}
+{"question_id": 2006147, "title": "requeue a sweatshop job in RabbitMQ", "tags": ["ruby-on-rails", "ruby"]}
+{"question_id": 2006149, "title": "Try Catch - not catching", "tags": [".net", "vb.net", "web-services"]}
+{"question_id": 2006159, "title": "Flash ScrollPane, why is my scroll width/height broken when loading a .SWF?", "tags": ["actionscript-3"]}
+{"question_id": 2006219, "title": "DataContext pre-populated with some pretty constanst tables", "tags": ["linq-to-sql"]}
+{"question_id": 2006229, "title": "How can I generate a new panel based on where my JTable is double-clicked?", "tags": ["java", "swing"]}
+{"question_id": 2006236, "title": "Unable to do LIKE search on word containing \"aa\"", "tags": ["sql", "sql-server"]}
+{"question_id": 2006370, "title": "Ways of keeping model values that are not submitted on post in ASP.NET MVC?", "tags": ["c#", ".net", "asp.net-mvc"]}
+{"question_id": 2006402, "title": "Compiling CUDA examples gives build error", "tags": ["c++", "visual-studio-2008"]}
+{"question_id": 2006433, "title": "How to get QGraphicsScene report item move events", "tags": ["qt"]}
+{"question_id": 2006437, "title": "return distinct products based on product_id", "tags": ["sql", "sql-server"]}
+{"question_id": 2006464, "title": "Product version for VS2010 projects", "tags": [".net"]}
+{"question_id": 2006467, "title": "RegEx number [-99.99..-0.01]+[0.01..99.99]", "tags": ["regex"]}
+{"question_id": 2006478, "title": "javascript validation- rbColorId object is still detected", "tags": ["javascript"]}
+{"question_id": 2006507, "title": "Add parameter to Button click event", "tags": ["c#", "wpf"]}
+{"question_id": 2006548, "title": "SIFR Newbie: font display problem in non-flash browsers", "tags": ["css"]}
+{"question_id": 2006615, "title": "Limit JTextPane memory usage", "tags": ["java"]}
+{"question_id": 2006626, "title": "Installing PHPUnit via PEAR", "tags": ["php"]}
+{"question_id": 2006636, "title": "Asynch Design C#", "tags": ["c#", "multithreading"]}
+{"question_id": 2006743, "title": "Error In C# When I Delete A Row", "tags": ["c#"]}
+{"question_id": 2006781, "title": "Alternative to header(location: ) php", "tags": ["php"]}
+{"question_id": 2006795, "title": "FxCop: Compound word should be treated as discrete term", "tags": ["c#"]}
+{"question_id": 2006821, "title": "Is there a GCC pragma to override generation of debug info (-g) for some section of code?", "tags": ["c++", "macos", "debugging"]}
+{"question_id": 2006872, "title": "WPF: Why shouldn't I use {TemplateBinding Margin} in ControlTemplate - is Margin meant only for element's containers?", "tags": ["wpf"]}
+{"question_id": 2006892, "title": "ICryptoTransform.TransformFinalBlock vs ICryptoTransform.TransformBlock", "tags": [".net"]}
+{"question_id": 2006934, "title": "Problem with Quicktime interop for 64bit", "tags": ["c#"]}
+{"question_id": 2007041, "title": "Could not load file or assembly error in ASP.NET when IIS server is idle", "tags": ["asp.net-mvc"]}
+{"question_id": 2007046, "title": "Rails Associations - Callback Sequence/Magic", "tags": ["ruby-on-rails"]}
+{"question_id": 2007077, "title": "not getting multiple values of xml using xsl", "tags": ["xml"]}
+{"question_id": 2007114, "title": "choose the item of a select", "tags": ["php", "javascript", "html"]}
+{"question_id": 2007134, "title": "Serialize objects containing objects java", "tags": ["java"]}
+{"question_id": 2007185, "title": "how to catch exceptions from one-way (fire and forget) ASP.NET webservice call", "tags": ["asp.net", "web-services"]}
+{"question_id": 2007206, "title": "Hudson style build reports on developer machines/within Eclipse", "tags": ["java", "eclipse"]}
+{"question_id": 2007261, "title": "Re-register events with jQuery", "tags": ["jquery"]}
+{"question_id": 2007262, "title": "Is there a way to rename a deployed ClickOnce application?", "tags": [".net"]}
+{"question_id": 2007277, "title": "Regular expression to match A, AB, ABC, but not AC. (\"starts with\")", "tags": ["javascript", "regex"]}
+{"question_id": 2007397, "title": "Howto prevent git from pushing changes to some files", "tags": ["git"]}
+{"question_id": 2007402, "title": "iPhone - Build Error Target is 3.1.2 but can not find NSPredicate", "tags": ["iphone"]}
+{"question_id": 2007417, "title": "mysql insert problem", "tags": ["php", "sql", "mysql"]}
+{"question_id": 2007545, "title": "Refresh (F5) not working in jQuery Dialog", "tags": ["jquery"]}
+{"question_id": 2007550, "title": "How can I get the parent Popup for a UIElement?", "tags": ["silverlight"]}
+{"question_id": 2007697, "title": "Correct debugging in Xcode (cocoa touch)", "tags": ["cocoa-touch", "xcode"]}
+{"question_id": 2007742, "title": "Rails - iterate over db entries in one field, separated by linebreaks", "tags": ["ruby-on-rails"]}
+{"question_id": 2007755, "title": "How to get the difference between two list based on substrings withing each string in the seperate lists", "tags": ["python", "string"]}
+{"question_id": 2007783, "title": "java ui implementation: short-term test + progress indicator w/o using separate dialog", "tags": ["java", "swing"]}
+{"question_id": 2007875, "title": "What strategies are used to implement type-ahead auto-completion on a large dataset?", "tags": [".net", "ajax"]}
+{"question_id": 2007894, "title": "Format Javascript in Visual Studio 2008?", "tags": ["visual-studio", "visual-studio-2008"]}
+{"question_id": 2007955, "title": "Simple Repository Question about Filtering and Sorting", "tags": ["c#"]}
+{"question_id": 2007976, "title": "Is there an equivalent to the C# \"var\" keyword in C++/CLI?", "tags": ["c#", ".net"]}
