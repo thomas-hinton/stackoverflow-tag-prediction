@@ -19,8 +19,34 @@ uv run so-tagger --version
 
 Use `uv sync --frozen` to install exactly what `uv.lock` pins (this is what CI does).
 
-Settings shared by the pipeline, such as the Supported tag frequency cut-off, live in the
-versioned [`config.toml`](config.toml).
+Settings shared by the pipeline, such as the seed, the Supported tag frequency cut-off, the
+split ratios and the Linear tagger's hyperparameters, live in the versioned
+[`config.toml`](config.toml).
+
+## Quickstart (CLI)
+
+From a fresh clone, after `uv sync`:
+
+```bash
+uv run so-tagger prepare                  # raw CSV -> data/prepared/ (Questions with Supported tags)
+uv run so-tagger split                    # -> data/splits/{train,validation,test}.jsonl
+uv run so-tagger train --tagger linear    # -> artifacts/linear/ (model + metadata.json)
+uv run so-tagger suggest "How do I parse JSON in Python?"
+```
+
+```text
+Tag     Score
+python  1.000
+json    0.990
+```
+
+Add `--json` to `suggest` for machine-readable output. Every command has `--help`, takes its
+input and output locations as options, and reads its settings from `config.toml` (`--config`
+selects another file).
+
+The frozen split in `data/splits/` is committed: it is the reference on which both Taggers are
+compared. `split` is stratified on Tags ([ADR 0004](docs/adr/0004-iteratively-stratified-frozen-split.md))
+and re-running it with the same configuration reproduces the files byte for byte.
 
 ## Data exploration
 
@@ -69,3 +95,4 @@ still happens on every pull request: the author posts a self-review comment befo
   - [ADR 0001: DistilBERT fine-tuned on CPU](docs/adr/0001-distilbert-fine-tuned-on-cpu.md)
   - [ADR 0002: GitHub Releases for model artifacts](docs/adr/0002-github-releases-for-model-artifacts.md)
   - [ADR 0003: Supported tag frequency cut-off](docs/adr/0003-supported-tag-frequency-cutoff.md)
+  - [ADR 0004: Iteratively stratified frozen split](docs/adr/0004-iteratively-stratified-frozen-split.md)
