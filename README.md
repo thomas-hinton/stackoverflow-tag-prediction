@@ -19,6 +19,20 @@ uv run so-tagger --version
 
 Use `uv sync --frozen` to install exactly what `uv.lock` pins (this is what CI does).
 
+Settings shared by the pipeline, such as the Supported tag frequency cut-off, live in the
+versioned [`config.toml`](config.toml).
+
+## Data exploration
+
+The [exploration notebook](notebooks/01_data_exploration.ipynb) checks the dataset's integrity
+and justifies the Supported tag cut-off. Its libraries live in a separate `explore` dependency
+group that the runtime install never pulls:
+
+```bash
+uv sync --group explore
+uv run jupyter lab notebooks/
+```
+
 ## Running the checks
 
 ```bash
@@ -54,3 +68,4 @@ still happens on every pull request: the author posts a self-review comment befo
 - Architecture decisions:
   - [ADR 0001: DistilBERT fine-tuned on CPU](docs/adr/0001-distilbert-fine-tuned-on-cpu.md)
   - [ADR 0002: GitHub Releases for model artifacts](docs/adr/0002-github-releases-for-model-artifacts.md)
+  - [ADR 0003: Supported tag frequency cut-off](docs/adr/0003-supported-tag-frequency-cutoff.md)
