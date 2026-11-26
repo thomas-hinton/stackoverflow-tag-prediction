@@ -21,7 +21,9 @@ dist/
 coverage.xml
 htmlcov/
 
-# Local Tagger artifacts and generated metrics (the frozen splits in data/ stay tracked)
+# Local Tagger artifacts, generated metrics and the intermediate prepared dataset
+# (the raw dataset and the frozen splits in data/ stay tracked)
+data/prepared/
 artifacts/
 models/
 metrics/
