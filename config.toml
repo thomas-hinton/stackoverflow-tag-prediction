@@ -1,0 +1,7 @@
+# Project configuration, versioned with the code.
+# Later tickets add sections here: split, linear tagger, transformer tagger and quality gate.
+
+[data]
+# A Tag becomes a Supported tag when at least this many distinct Questions carry it.
+# Questions left with no Supported tag are dropped. Rationale: docs/adr/0003.
+frequency_cutoff = 20
