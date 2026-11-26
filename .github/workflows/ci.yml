@@ -25,7 +25,7 @@ jobs:
         with:
           dockerfile: Dockerfile
 
-      # setup-uv publishes no floating major tag (such as v10): pin a full version.
+      # setup-uv publishes no floating major tag (`@v10` does not resolve): pin a full version.
       - name: Install uv
         uses: astral-sh/setup-uv@v10.4.0
         with:
