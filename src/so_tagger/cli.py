@@ -8,8 +8,10 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+import uvicorn
 
 from so_tagger import __version__
+from so_tagger.api import DEV_VERSION, create_app, load_taggers
 from so_tagger.config import DEFAULT_CONFIG_PATH, ConfigError, load_config
 from so_tagger.dataset import (
     DatasetError,
@@ -265,6 +267,39 @@ def evaluate(
     )
     typer.echo(summary(metrics))
     typer.echo(f"Metrics written to {metrics_path}")
+
+
+@app.command()
+def serve(
+    host: Annotated[
+        str, typer.Option(envvar="SO_TAGGER_HOST", help="Interface to listen on.")
+    ] = "127.0.0.1",
+    port: Annotated[int, typer.Option(envvar="SO_TAGGER_PORT", help="Port to listen on.")] = 8000,
+    linear_dir: Annotated[
+        Path,
+        typer.Option(
+            envvar="SO_TAGGER_LINEAR_DIR",
+            help="Linear tagger directory written by `train`.",
+            file_okay=False,
+        ),
+    ] = DEFAULT_TAGGERS_DIR / "linear",
+    version: Annotated[
+        str,
+        typer.Option(
+            envvar="SO_TAGGER_VERSION",
+            help="Served Tagger version: the Release tag the Taggers come from.",
+        ),
+    ] = DEV_VERSION,
+) -> None:
+    """Serve the HTTP API; the interactive documentation is at /docs.
+
+    Taggers are loaded once at startup. A missing Tagger directory leaves that Tagger
+    unloaded: the API still starts, and GET /health answers 503 while the Linear tagger is
+    missing. Only the Linear tagger is served for now.
+    """
+    with _user_errors():
+        taggers = load_taggers({"linear": linear_dir})
+    uvicorn.run(create_app(taggers, version=version), host=host, port=port)
 
 
 @app.command()
