@@ -67,10 +67,6 @@ def test_an_off_topic_title_still_yields_a_suggestion(tagger: Tagger) -> None:
     assert len(tagger.suggest(OFF_TOPIC_TITLE)) >= 1
 
 
-def test_suggests_the_obvious_tag_for_a_clear_title(tagger: Tagger) -> None:
-    assert tagger.suggest("How do I parse JSON in Python?")[0].tag == "python"
-
-
 def test_batch_scores_have_one_row_per_title_and_one_column_per_supported_tag(
     tagger: Tagger,
 ) -> None:

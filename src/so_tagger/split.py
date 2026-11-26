@@ -43,7 +43,7 @@ class DatasetSplit:
 def split_questions(
     questions: Sequence[Question],
     supported_tags: Sequence[str],
-    ratios: SplitConfig,
+    split_config: SplitConfig,
     seed: int,
 ) -> DatasetSplit:
     """Split Questions into train, validation and test sets.
@@ -55,10 +55,10 @@ def split_questions(
     by_id = sorted(questions, key=lambda question: question.id)
     unassigned = [by_id[index] for index in rng.permutation(len(by_id))]
 
-    capacity = _set_sizes(len(unassigned), ratios.ratios())
+    capacity = _set_sizes(len(unassigned), split_config.ratios())
     tag_counts = Counter(tag for question in unassigned for tag in set(question.tags))
     wanted = [
-        {tag: ratio * count for tag, count in tag_counts.items()} for ratio in ratios.ratios()
+        {tag: ratio * count for tag, count in tag_counts.items()} for ratio in split_config.ratios()
     ]
     assigned: list[list[Question]] = [[] for _ in SPLIT_NAMES]
 

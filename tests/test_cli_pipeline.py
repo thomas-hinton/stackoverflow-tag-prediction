@@ -245,3 +245,20 @@ def test_prepare_keeps_the_tag_named_null(tmp_path: Path, fixture_config: Path) 
     assert {tag for q in read_jsonl(tmp_path / "out" / "questions.jsonl") for tag in q["tags"]} == {
         "null"
     }
+
+
+@pytest.mark.parametrize("command", [["train"], ["suggest", "Any title"]])
+def test_an_unknown_tagger_kind_is_rejected_with_the_valid_kinds(command: list[str]) -> None:
+    result = runner.invoke(app, [*command, "--tagger", "forest"])
+
+    assert result.exit_code == 2
+    assert "Unknown Tagger kind 'forest'" in result.output
+    assert "linear" in result.output
+
+
+@pytest.mark.parametrize("title", ["", "   "])
+def test_suggest_rejects_an_empty_title(title: str) -> None:
+    result = runner.invoke(app, ["suggest", title])
+
+    assert result.exit_code == 2
+    assert "Title must not be empty" in result.output

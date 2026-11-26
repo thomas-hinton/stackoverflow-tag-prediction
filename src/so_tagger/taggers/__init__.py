@@ -36,10 +36,7 @@ def train_tagger(
 
 def load_tagger(directory: Path, kind: str | None = None) -> Tagger:
     """Load the Tagger saved in ``directory``, checking its kind when one is given."""
-    metadata = TaggerMetadata.read(directory)
-    if kind is not None and metadata.kind != kind:
-        raise TaggerError(f"{directory} holds a '{metadata.kind}' Tagger, not a '{kind}' one.")
-    return _tagger_class(metadata.kind).load(directory)
+    return _tagger_class(kind or TaggerMetadata.read(directory).kind).load(directory)
 
 
 def _tagger_class(kind: str) -> type[Tagger]:

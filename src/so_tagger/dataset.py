@@ -62,8 +62,8 @@ def read_raw_questions(path: Path) -> list[Question]:
         if tuple(reader.fieldnames or ()) != RAW_COLUMNS:
             raise DatasetError(f"Expected columns {RAW_COLUMNS}, got {reader.fieldnames}.")
         for line, row in enumerate(reader, start=2):
-            post_id, tag, title = int(row["post_id"]), row["tag_name"], row["title"].strip()
-            if not tag or not title:
+            post_id, tag, title = int(row["post_id"]), row["tag_name"], row["title"]
+            if not tag.strip() or not title.strip():
                 raise DatasetError(f"Line {line}: empty Tag or Title for Question {post_id}.")
             if titles.setdefault(post_id, title) != title:
                 raise DatasetError(f"Question {post_id} has rows with different Titles.")

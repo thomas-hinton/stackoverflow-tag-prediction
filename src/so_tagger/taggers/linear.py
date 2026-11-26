@@ -23,7 +23,7 @@ MODEL_FILE = "model.joblib"
 class LinearTagger(Tagger):
     """Word and character n-gram TF-IDF, then one logistic regression per Supported tag.
 
-    A Score is the predicted probability of its Tag's logistic regression.
+    A Score is the probability that its Tag's logistic regression estimates for the Title.
     """
 
     kind = "linear"
@@ -75,7 +75,7 @@ class LinearTagger(Tagger):
                     ),
                 ),
                 (
-                    "classifier",
+                    "logistic_regression",
                     OneVsRestClassifier(
                         LogisticRegression(
                             C=settings.C,
@@ -89,8 +89,8 @@ class LinearTagger(Tagger):
             ]
         )
         binarizer = MultiLabelBinarizer(classes=list(metadata.supported_tags))
-        targets = binarizer.fit_transform([question.tags for question in train])
-        pipeline.fit([question.title for question in train], targets)
+        tag_matrix = binarizer.fit_transform([question.tags for question in train])
+        pipeline.fit([question.title for question in train], tag_matrix)
         return cls(metadata, pipeline)
 
     def score(self, titles: Sequence[str]) -> ScoreMatrix:

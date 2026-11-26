@@ -35,8 +35,29 @@ app = typer.Typer(
 ConfigOption = Annotated[
     Path, typer.Option("--config", help="Project configuration file.", dir_okay=False)
 ]
+
+
+def _known_tagger_kind(kind: str) -> str:
+    if kind not in TAGGER_KINDS:
+        raise typer.BadParameter(
+            f"Unknown Tagger kind '{kind}'; expected one of: {', '.join(TAGGER_KINDS)}."
+        )
+    return kind
+
+
+def _non_empty_title(title: str) -> str:
+    if not title.strip():
+        raise typer.BadParameter("The Title must not be empty.")
+    return title
+
+
 TaggerOption = Annotated[
-    str, typer.Option("--tagger", help=f"Tagger kind: {', '.join(TAGGER_KINDS)}.")
+    str,
+    typer.Option(
+        "--tagger",
+        help=f"Tagger kind: {', '.join(TAGGER_KINDS)}.",
+        callback=_known_tagger_kind,
+    ),
 ]
 
 
@@ -132,7 +153,7 @@ def train(
     ] = DEFAULT_SPLITS_DIR,
     output_dir: Annotated[
         Path | None,
-        typer.Option(help="Where to save the Tagger directory. [default: artifacts/<tagger>]"),
+        typer.Option(help="Where to save the Tagger directory. Defaults to artifacts/<tagger>."),
     ] = None,
     config: ConfigOption = DEFAULT_CONFIG_PATH,
 ) -> None:
@@ -156,11 +177,16 @@ def train(
 
 @app.command()
 def suggest(
-    title: Annotated[str, typer.Argument(help="Title of the Question to suggest Tags for.")],
+    title: Annotated[
+        str,
+        typer.Argument(
+            help="Title of the Question to suggest Tags for.", callback=_non_empty_title
+        ),
+    ],
     tagger: TaggerOption = "linear",
     tagger_dir: Annotated[
         Path | None,
-        typer.Option(help="Tagger directory written by `train`. [default: artifacts/<tagger>]"),
+        typer.Option(help="Tagger directory written by `train`. Defaults to artifacts/<tagger>."),
     ] = None,
     as_json: Annotated[
         bool, typer.Option("--json", help="Print the Suggestion list as JSON.")

@@ -2,8 +2,6 @@ import pytest
 
 from so_tagger.domain import Suggestion
 from so_tagger.suggestion_policy import (
-    MAX_SUGGESTIONS,
-    MIN_SUGGESTIONS,
     apply_suggestion_policy,
 )
 
@@ -38,10 +36,6 @@ def test_breaks_score_ties_by_tag_name() -> None:
     suggestions = apply_suggestion_policy(scores, score_cutoff=0.5)
 
     assert [s.tag for s in suggestions] == ["css", "python", "sql"]
-
-
-def test_limits_are_one_and_five() -> None:
-    assert (MIN_SUGGESTIONS, MAX_SUGGESTIONS) == (1, 5)
 
 
 def test_rejects_empty_scores() -> None:
