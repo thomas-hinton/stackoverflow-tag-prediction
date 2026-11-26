@@ -11,7 +11,7 @@ import typer
 import uvicorn
 
 from so_tagger import __version__
-from so_tagger.api import DEV_VERSION, create_app, load_taggers
+from so_tagger.api import create_app, load_taggers
 from so_tagger.config import DEFAULT_CONFIG_PATH, ConfigError, load_config
 from so_tagger.dataset import (
     DatasetError,
@@ -29,6 +29,7 @@ from so_tagger.evaluation import (
     metrics_report,
     summary,
 )
+from so_tagger.release import ReleaseError, package_tagger
 from so_tagger.split import SPLIT_NAMES, SplitError, split_questions, write_split
 from so_tagger.taggers import TAGGER_KINDS, TaggerError, load_tagger, train_tagger
 
@@ -37,6 +38,7 @@ DEFAULT_PREPARED_DIR = Path("data/prepared")
 DEFAULT_SPLITS_DIR = Path("data/splits")
 DEFAULT_TAGGERS_DIR = Path("artifacts")
 DEFAULT_METRICS_DIR = Path("metrics")
+DEFAULT_RELEASE_DIR = Path("dist")
 
 app = typer.Typer(
     help="Suggest Tags for a StackOverflow Question from its Title.",
@@ -85,7 +87,14 @@ def _user_errors() -> Iterator[None]:
     """Turn expected failures (bad configuration, bad data) into a clean error and exit code."""
     try:
         yield
-    except (ConfigError, DatasetError, EvaluationError, SplitError, TaggerError) as error:
+    except (
+        ConfigError,
+        DatasetError,
+        EvaluationError,
+        ReleaseError,
+        SplitError,
+        TaggerError,
+    ) as error:
         typer.echo(f"Error: {error}", err=True)
         raise typer.Exit(code=1) from error
 
@@ -270,6 +279,47 @@ def evaluate(
 
 
 @app.command()
+def package(
+    release_tag: Annotated[
+        str,
+        typer.Option(help="Release tag the Tagger is published under: vMAJOR.MINOR.PATCH."),
+    ],
+    tagger: TaggerOption = "linear",
+    tagger_dir: Annotated[
+        Path | None,
+        typer.Option(help="Tagger directory written by `train`. Defaults to artifacts/<tagger>."),
+    ] = None,
+    metrics: Annotated[
+        Path | None,
+        typer.Option(
+            help="Metrics file written by `evaluate`, copied as <tagger>-metrics.json.",
+            dir_okay=False,
+        ),
+    ] = None,
+    output_dir: Annotated[
+        Path, typer.Option(help="Where to write the Release assets.", file_okay=False)
+    ] = DEFAULT_RELEASE_DIR,
+) -> None:
+    """Turn a Tagger directory into the Release assets of a Release.
+
+    Writes <tagger>-tagger.tar.gz, the Tagger directory whose metadata records the Release tag
+    as its version, so that the API reports it. With --metrics, also writes
+    <tagger>-metrics.json. The Tagger directory itself is left untouched.
+    """
+    with _user_errors():
+        assets = package_tagger(
+            tagger_dir or DEFAULT_TAGGERS_DIR / tagger,
+            release_tag,
+            output_dir,
+            kind=tagger,
+            metrics=metrics,
+        )
+    typer.echo(f"Packaged the {tagger} Tagger as version {release_tag}: {assets.archive}")
+    if assets.metrics is not None:
+        typer.echo(f"Metrics file copied to {assets.metrics}")
+
+
+@app.command()
 def serve(
     host: Annotated[
         str, typer.Option(envvar="SO_TAGGER_HOST", help="Interface to listen on.")
@@ -283,23 +333,17 @@ def serve(
             file_okay=False,
         ),
     ] = DEFAULT_TAGGERS_DIR / "linear",
-    version: Annotated[
-        str,
-        typer.Option(
-            envvar="SO_TAGGER_VERSION",
-            help="Served Tagger version: the Release tag the Taggers come from.",
-        ),
-    ] = DEV_VERSION,
 ) -> None:
     """Serve the HTTP API; the interactive documentation is at /docs.
 
     Taggers are loaded once at startup. A missing Tagger directory leaves that Tagger
     unloaded: the API still starts, and GET /health answers 503 while the Linear tagger is
-    missing. Only the Linear tagger is served for now.
+    missing. Only the Linear tagger is served for now. Each Tagger reports the version
+    recorded in its metadata: the Release tag set by `package`, or `dev`.
     """
     with _user_errors():
         taggers = load_taggers({"linear": linear_dir})
-    uvicorn.run(create_app(taggers, version=version), host=host, port=port)
+    uvicorn.run(create_app(taggers), host=host, port=port)
 
 
 @app.command()

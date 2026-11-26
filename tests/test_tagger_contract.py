@@ -113,6 +113,7 @@ def test_saved_directory_holds_the_tagger_metadata(tagger: Tagger, tmp_path: Pat
     assert metadata["split_sizes"] == {"train": 50, "validation": 11}
     assert metadata["training_seconds"] > 0
     assert metadata["package_version"] == so_tagger.__version__
+    assert metadata["version"] == "dev"
     assert isinstance(metadata["training_config"], dict) and metadata["training_config"]
     assert datetime.fromisoformat(metadata["created_at"]).tzinfo is not None
 
@@ -141,3 +142,15 @@ def test_a_tagger_directory_without_a_tuned_cutoff_is_rejected(
 
     with pytest.raises(TaggerError, match="no tuned Score cut-off"):
         load_tagger(tmp_path / "tagger")
+
+
+def test_metadata_written_before_the_version_existed_loads_as_dev(
+    tagger: Tagger, tmp_path: Path
+) -> None:
+    tagger.save(tmp_path / "tagger")
+    path = tmp_path / "tagger" / "metadata.json"
+    metadata = json.loads(path.read_text(encoding="utf-8"))
+    del metadata["version"]
+    path.write_text(json.dumps(metadata), encoding="utf-8")
+
+    assert load_tagger(tmp_path / "tagger").metadata.version == "dev"

@@ -61,3 +61,9 @@ _Avoid_: Top-k, prediction set
 **Metrics file**:
 The JSON record `evaluate` writes for one Tagger on one split: its scores plus what is needed to trace the run. Its schema is in `docs/metrics.md`.
 _Avoid_: Report, results, scores file
+
+### Delivery
+
+**Release**:
+A GitHub Release tagged `vMAJOR.MINOR.PATCH` that carries, per Tagger, its archive and its Metrics file; the Docker image is built from one Release, and a Tagger's version is the tag of the Release it was packaged for.
+_Avoid_: Model version, build, deployment

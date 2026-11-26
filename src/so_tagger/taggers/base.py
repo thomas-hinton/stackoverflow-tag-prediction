@@ -28,6 +28,8 @@ from so_tagger.domain import Question, SuggestionList
 from so_tagger.suggestion_policy import apply_suggestion_policy
 
 METADATA_FILE = "metadata.json"
+DEV_VERSION = "dev"
+"""The version of a Tagger that does not come from a Release."""
 
 ScoreMatrix = npt.NDArray[np.float64]
 """Per-Tag Scores in [0, 1]: one row per Title, one column per Supported tag, in order."""
@@ -61,6 +63,9 @@ class TaggerMetadata:
     """What a Tagger kind learns about its own training beyond the hyperparameters, such as
     the Transformer tagger's maximum sequence length and kept epoch. Empty for the Linear
     tagger, and absent from metadata written before it existed."""
+    version: str = DEV_VERSION
+    """The Release tag the Tagger was packaged for (``so-tagger package``), or ``dev`` for a
+    Tagger fresh from ``train``. Absent from metadata written before it existed."""
 
     @classmethod
     def at_training(
@@ -89,9 +94,12 @@ class TaggerMetadata:
             created_at=datetime.now(UTC).isoformat(timespec="seconds"),
         )
 
+    def to_json(self) -> str:
+        """The content of ``metadata.json``."""
+        return json.dumps(asdict(self), indent=2, ensure_ascii=False) + "\n"
+
     def write(self, directory: Path) -> None:
-        text = json.dumps(asdict(self), indent=2, ensure_ascii=False)
-        (directory / METADATA_FILE).write_text(text + "\n", encoding="utf-8")
+        (directory / METADATA_FILE).write_text(self.to_json(), encoding="utf-8")
 
     @classmethod
     def read(cls, directory: Path) -> Self:

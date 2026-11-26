@@ -15,15 +15,15 @@ from so_tagger.api import MAX_TITLE_LENGTH, TaggerKind, create_app, load_taggers
 from so_tagger.cli import app as cli_app
 from so_tagger.suggestion_policy import MAX_SUGGESTIONS, MIN_SUGGESTIONS
 from so_tagger.taggers import TAGGER_KINDS, Tagger, TaggerError
-from tests.conftest import FIXTURE_SUPPORTED_TAGS
+from tests.conftest import FIXTURE_SUPPORTED_TAGS, RELEASE_TAG
 
 TITLE = "How do I parse JSON in Python?"
 OFF_TOPIC_TITLE = "Hello, how are you?"
 
 
 @pytest.fixture(scope="module")
-def client(linear_tagger: Tagger) -> TestClient:
-    return TestClient(create_app({"linear": linear_tagger}, version="v1.2.3"))
+def client(released_linear_tagger: Tagger) -> TestClient:
+    return TestClient(create_app({"linear": released_linear_tagger}))
 
 
 @pytest.fixture(scope="module")
@@ -57,7 +57,7 @@ def test_without_a_tagger_the_linear_tagger_answers(client: TestClient) -> None:
     body = suggest(client, {"title": TITLE})
 
     assert body["tagger"] == "linear"
-    assert body["version"] == "v1.2.3"
+    assert body["version"] == RELEASE_TAG
     assert_valid_suggestion_list(body)
 
 
@@ -127,7 +127,7 @@ def test_the_known_kinds_of_the_api_are_the_tagger_kinds() -> None:
     assert get_args(TaggerKind) == TAGGER_KINDS
 
 
-def test_health_lists_every_tagger_with_its_version(client: TestClient) -> None:
+def test_health_lists_every_tagger_with_the_version_of_its_release(client: TestClient) -> None:
     response = client.get("/health")
 
     assert response.status_code == 200
@@ -136,10 +136,10 @@ def test_health_lists_every_tagger_with_its_version(client: TestClient) -> None:
         "taggers": {
             "linear": {
                 "loaded": True,
-                "version": "v1.2.3",
+                "version": RELEASE_TAG,
                 "n_supported_tags": len(FIXTURE_SUPPORTED_TAGS),
             },
-            "transformer": {"loaded": False, "version": "v1.2.3", "n_supported_tags": 0},
+            "transformer": {"loaded": False, "version": None, "n_supported_tags": 0},
         },
     }
 
@@ -152,7 +152,14 @@ def test_health_is_unavailable_without_the_default_tagger(
     assert response.status_code == 503
     body = response.json()
     assert body["status"] == "unavailable"
-    assert body["taggers"]["linear"] == {"loaded": False, "version": "dev", "n_supported_tags": 0}
+    assert body["taggers"]["linear"] == {"loaded": False, "version": None, "n_supported_tags": 0}
+
+
+def test_a_tagger_fresh_from_training_reports_the_dev_version(linear_tagger: Tagger) -> None:
+    client = TestClient(create_app({"linear": linear_tagger}))
+
+    assert suggest(client, {"title": TITLE})["version"] == "dev"
+    assert client.get("/health").json()["taggers"]["linear"]["version"] == "dev"
 
 
 def test_the_default_tagger_is_unavailable_when_not_loaded(
@@ -225,9 +232,9 @@ def test_load_taggers_refuses_a_directory_of_another_kind(
 
 
 def test_serve_loads_the_tagger_directory_from_the_environment(
-    linear_tagger: Tagger, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    released_linear_tagger: Tagger, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    linear_tagger.save(tmp_path / "linear")
+    released_linear_tagger.save(tmp_path / "linear")
     served: dict[str, Any] = {}
 
     def fake_run(app: FastAPI, host: str, port: int) -> None:
@@ -237,14 +244,14 @@ def test_serve_loads_the_tagger_directory_from_the_environment(
     result = CliRunner().invoke(
         cli_app,
         ["serve", "--port", "9000"],
-        env={"SO_TAGGER_LINEAR_DIR": str(tmp_path / "linear"), "SO_TAGGER_VERSION": "v2.0.0"},
+        env={"SO_TAGGER_LINEAR_DIR": str(tmp_path / "linear")},
     )
 
     assert result.exit_code == 0, result.output
     assert (served["host"], served["port"]) == ("127.0.0.1", 9000)
     health = TestClient(served["app"]).get("/health").json()
     assert health["taggers"]["linear"]["loaded"] is True
-    assert health["taggers"]["linear"]["version"] == "v2.0.0"
+    assert health["taggers"]["linear"]["version"] == RELEASE_TAG
 
 
 def test_serve_starts_without_a_tagger_and_reports_it_unhealthy(
