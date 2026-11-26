@@ -35,8 +35,10 @@ jobs:
       # The `transformer` extra (CPU-only torch, transformers) lets the Tagger contract suite
       # run the Transformer tagger. The uv cache keeps its wheels between runs; tests use a
       # tiny local checkpoint, so nothing is downloaded from the Hugging Face Hub.
+      # The `docs` group (Playwright, Pillow) lets mypy and the tests check `docs-screenshots`.
+      # No browser is installed: its end-to-end test is `slow` and runs locally only.
       - name: Install dependencies
-        run: uv sync --frozen --extra transformer
+        run: uv sync --frozen --extra transformer --group docs
 
       - name: Lint
         run: uv run ruff check .

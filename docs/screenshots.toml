@@ -1,0 +1,20 @@
+# Capture list of the `docs-screenshots` command: one [[capture]] table per image written to
+# docs/images/screenshots/<name>.png. See docs/agents/illustrations.md.
+#
+#   name      file name of the image (lowercase letters, digits and hyphens)
+#   url       a path on a project server ("/docs") or an absolute public URL ("https://...")
+#   server    the server a path targets: "api" (default); absent for an absolute URL
+#   viewport  { width = 1280, height = 800 } by default
+#   actions   run in order before capture: { fill = "<selector>", value = "<text>" },
+#             { click = "<selector>" }, { wait_for = "<selector>" }
+#   selector  crop the image to this element instead of the viewport
+
+[[capture]]
+name = "api-docs-suggest"
+url = "/docs"
+selector = "#operations-default-suggest_suggest_post"
+actions = [
+  { wait_for = "#operations-default-suggest_suggest_post .opblock-summary" },
+  { click = "#operations-default-suggest_suggest_post .opblock-summary" },
+  { wait_for = "#operations-default-suggest_suggest_post .responses-wrapper" },
+]
