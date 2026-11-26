@@ -97,3 +97,9 @@ default `config.toml`:
 
 The Transformer tagger ranks Tags slightly better (P@3, R@5) but neglects rare Tags (macro-F1);
 its training time is on a 12-thread laptop CPU.
+
+![Validation micro-F1 of the Transformer tagger after each of its 10 training epochs, against the Linear tagger's validation micro-F1 of 0.523 as a dashed line; the Transformer sits near 0.13 for epochs 1 and 2, jumps to 0.35 at epoch 3, then climbs slowly to 0.527 at epoch 10, crossing the Linear line only at epoch 9.](images/training-curve.png)
+
+*Look at the last epochs: the Transformer only just passes the Linear tagger at epoch 9 and is
+still rising slightly at epoch 10, so the epoch kept is the last one run.*
+Regenerate with `uv run --group explore python scripts/plot_training_curve.py`.
