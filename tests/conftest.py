@@ -4,6 +4,11 @@ from pathlib import Path
 
 import pytest
 
+from so_tagger.config import load_config
+from so_tagger.dataset import prepare_questions, read_raw_questions
+from so_tagger.split import split_questions
+from so_tagger.taggers import Tagger, train_tagger
+
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 FIXTURE_DATASET = FIXTURES / "stackoverflow_posts_fixture.csv"
 
@@ -111,3 +116,16 @@ def needs_transformer_extra(kind: str) -> None:
     if kind == "transformer":
         pytest.importorskip("torch")
         pytest.importorskip("transformers")
+
+
+@pytest.fixture(scope="session")
+def linear_tagger(tmp_path_factory: pytest.TempPathFactory, fixture_config_toml: str) -> Tagger:
+    """A small Linear tagger trained and tuned on the fixture dataset, shared by the session."""
+    config_path = tmp_path_factory.mktemp("linear-config") / "config.toml"
+    config_path.write_text(fixture_config_toml, encoding="utf-8")
+    config = load_config(config_path)
+    dataset = prepare_questions(read_raw_questions(FIXTURE_DATASET), config.data.frequency_cutoff)
+    dataset_split = split_questions(
+        dataset.questions, dataset.supported_tags, config.split, config.seed
+    )
+    return train_tagger("linear", dataset_split.train, dataset_split.validation, config)

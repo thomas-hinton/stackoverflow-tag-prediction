@@ -84,6 +84,55 @@ The frozen split in `data/splits/` is committed: it is the reference on which bo
 compared. `split` is stratified on Tags ([ADR 0004](docs/adr/0004-iteratively-stratified-frozen-split.md))
 and re-running it with the same configuration reproduces the files byte for byte.
 
+## Run the API locally
+
+`serve` starts an HTTP API on the Linear tagger saved by `train` (in `artifacts/linear/` by
+default). The interactive documentation, with the request and response models and their
+examples, is at <http://127.0.0.1:8000/docs>.
+
+```bash
+uv run so-tagger serve                    # http://127.0.0.1:8000
+```
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/suggest \
+  -H 'Content-Type: application/json' \
+  -d '{"title": "How do I parse JSON in Python?"}'
+```
+
+```json
+{
+  "tagger": "linear",
+  "version": "dev",
+  "suggestions": [
+    {"tag": "python", "score": 0.9997604176236493},
+    {"tag": "json", "score": 0.9902810532193043}
+  ]
+}
+```
+
+<!-- Interactive docs screenshot: generated and embedded by the `docs-screenshots` command (#16). -->
+
+- **`POST /suggest`** takes a `title` and an optional `tagger` (`linear` by default). It returns 1
+  to 5 Suggestions by descending Score, from the Suggestion policy at the Tagger's tuned Score
+  cut-off. `version` is the Release tag the Tagger comes from, or `dev`.
+- **422** for an empty or whitespace-only Title, a Title longer than 300 characters (after
+  stripping), or an unknown `tagger`; the message lists the valid names.
+- **503** for a known Tagger that is not loaded: `transformer` is not served yet (#11).
+- **`GET /health`** lists every Tagger kind with `loaded`, `version` and `n_supported_tags`. It
+  returns 200 when the Linear tagger is loaded and 503 otherwise.
+
+| Option | Environment variable | Default |
+| --- | --- | --- |
+| `--host` | `SO_TAGGER_HOST` | `127.0.0.1` |
+| `--port` | `SO_TAGGER_PORT` | `8000` |
+| `--linear-dir` | `SO_TAGGER_LINEAR_DIR` | `artifacts/linear` |
+| `--version` | `SO_TAGGER_VERSION` | `dev` |
+
+A missing Tagger directory does not stop the server: that Tagger is reported as not loaded.
+Each `POST /suggest` logs one JSON line with the Tagger, the Title length, the number of
+Suggestions and the latency. Titles themselves are only logged at debug level.
+
 ## Data exploration
 
 The [exploration notebook](notebooks/01_data_exploration.ipynb) checks the dataset's integrity
@@ -105,7 +154,8 @@ uv run pytest                  # tests with coverage
 uv run pytest -m "not slow"    # skip heavy tests (CI does)
 ```
 
-The Tagger contract suite runs against both Taggers; the Transformer tagger uses a tiny
+The HTTP API suite drives the app in process, on a small Linear tagger trained on the fixture
+dataset. The Tagger contract suite runs against both Taggers; the Transformer tagger uses a tiny
 randomly initialised DistilBERT built in the test, so no checkpoint is downloaded. The only
 `slow` test fine-tunes the real `distilbert-base-uncased` checkpoint.
 
