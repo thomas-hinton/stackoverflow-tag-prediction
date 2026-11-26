@@ -18,6 +18,12 @@ measured the same way.
    Supported tags.
 3. Keep the cut-off with the highest micro-F1. **Ties go to the smallest cut-off.**
 
+![Validation micro-F1, micro-precision and micro-recall of the Linear tagger for every Score cut-off from 0.01 to 0.99; precision rises and recall falls as the cut-off grows, and micro-F1 peaks at 0.523 at the chosen cut-off 0.45, where the two curves cross.](images/cutoff-tuning.png)
+
+*Look at the dashed line: micro-F1 peaks at 0.45, where precision and recall cross; above it
+F1 stays nearly flat because the at-least-1 rule keeps one Suggestion per Question.*
+Regenerate with `uv run --group explore python scripts/plot_cutoff_tuning.py`.
+
 The chosen `score_cutoff` and its `validation_micro_f1` are saved in the Tagger's
 `metadata.json`, and `suggest` uses that cut-off. The test split is never passed to `train`; a
 test proves that `train` gives the same cut-off when `test.jsonl` is replaced with garbage.
