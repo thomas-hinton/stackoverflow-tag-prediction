@@ -13,15 +13,11 @@ How agents add images to the README, the report and pull requests. Illustrations
 ## Steps (run by the subagent)
 
 1. Decide which illustrations the change affects, using the table above. The bar: the image shows something prose cannot. If nothing qualifies, report "no illustration needed" and stop.
-2. For screenshots, declare each new capture in the `docs-screenshots` capture list (name, URL, viewport, optional actions such as typing a Title), then run the command. It starts the API and demo on a fixture Tagger, captures every declared page and writes optimised PNGs to the docs images folder.
+2. For screenshots, declare each new capture as a `[[capture]]` table in `docs/screenshots.toml`; its header documents the fields (name, path on the API or absolute `https://` URL for a public GitHub page, viewport, actions, selector to crop to). Then run `uv run --group docs docs-screenshots` (or `--only <name>`) from the repository root. It trains a Linear tagger on the fixture dataset, serves the API on it on a free port, captures every declared page in headless Chromium and writes optimised PNGs to `docs/images/screenshots/`. First time only: `uv sync --group docs && uv run --group docs playwright install chromium`.
 3. For charts, add or update the script or CLI command that generates them, and commit both the generator and its PNG output.
 4. Embed each image in the README, report or PR description with meaningful alt text and a one-line caption saying what to look at.
-5. Done when: every embedded image is produced by a committed command, each PNG is under 300 KB, and no orphan image remains in the images folder.
+5. Done when: every embedded image is produced by a committed command, each PNG is under 300 KB (`docs-screenshots` fails otherwise), and `uv run --group docs docs-screenshots --check` reports no orphan screenshot. Delete the PNG of a capture you remove.
 
 ## Pull requests
 
 For a PR with a visual change, regenerate the affected screenshots in the PR branch and reference them in the PR description through their raw GitHub URL on that branch. GitHub's rich diff then shows before/after for each changed image. Commit only images that the README or report embeds; a visual worth showing in a PR is worth keeping in the docs.
-
-## Before the tooling exists
-
-The `docs-screenshots` command is delivered by its own sub-issue of #2. Until it is merged, skip screenshots and limit illustrations to charts and Mermaid diagrams.

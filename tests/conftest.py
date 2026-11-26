@@ -14,51 +14,16 @@ from so_tagger.taggers import Tagger, load_tagger, train_tagger
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 FIXTURE_DATASET = FIXTURES / "stackoverflow_posts_fixture.csv"
 
-# Same shape as the project config.toml, scaled down to the fixture dataset. The Transformer
-# tagger fine-tunes a tiny checkpoint built by the `tiny_checkpoint` fixture, so that it trains
-# in seconds on CPU without any download.
-FIXTURE_CONFIG_TEMPLATE = """\
-seed = 7
-
-[data]
-frequency_cutoff = 5
-
-[split]
-train_ratio = 0.70
-validation_ratio = 0.15
-test_ratio = 0.15
-
-[linear_tagger]
-word_ngram_range = [1, 2]
-char_ngram_range = [2, 4]
-min_df = 1
-sublinear_tf = true
-C = 10.0
-class_weight = "balanced"
-max_iter = 1000
-
-[transformer_tagger]
-checkpoint = "{checkpoint}"
-learning_rate = 1e-3
-batch_size = 8
-epochs = 2
-warmup_ratio = 0.1
-weight_decay = 0.01
-patience = 1
-max_length_percentile = 99
-inference_batch_size = 16
-num_threads = 2
-
-[quality_gate.min_test_micro_f1]
-linear = 0.20
-transformer = 0.20
-"""
+# The Transformer tagger fine-tunes a tiny checkpoint built by the `tiny_checkpoint` fixture, so
+# that it trains in seconds on CPU without any download.
+FIXTURE_CONFIG = FIXTURES / "config.toml"
 
 FIXTURE_SUPPORTED_TAGS = ("css", "javascript", "python", "sql")
 
 
 def fixture_config_text(checkpoint: Path) -> str:
-    return FIXTURE_CONFIG_TEMPLATE.format(checkpoint=checkpoint.as_posix())
+    template = FIXTURE_CONFIG.read_text(encoding="utf-8")
+    return template.replace("{checkpoint}", checkpoint.as_posix())
 
 
 @pytest.fixture(scope="session")
