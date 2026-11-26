@@ -115,23 +115,142 @@ curl -s -X POST http://127.0.0.1:8000/suggest \
 
 - **`POST /suggest`** takes a `title` and an optional `tagger` (`linear` by default). It returns 1
   to 5 Suggestions by descending Score, from the Suggestion policy at the Tagger's tuned Score
-  cut-off. `version` is the Release tag the Tagger comes from, or `dev`.
+  cut-off. `version` is the Release tag the Tagger was packaged for (see
+  [Releases](#releases)), or `dev` for a Tagger fresh from `train`.
 - **422** for an empty or whitespace-only Title, a Title longer than 300 characters (after
   stripping), or an unknown `tagger`; the message lists the valid names.
 - **503** for a known Tagger that is not loaded: `transformer` is not served yet (#11).
-- **`GET /health`** lists every Tagger kind with `loaded`, `version` and `n_supported_tags`. It
-  returns 200 when the Linear tagger is loaded and 503 otherwise.
+- **`GET /health`** lists every Tagger kind with `loaded`, `version` (`null` when not loaded) and
+  `n_supported_tags`. It returns 200 when the Linear tagger is loaded and 503 otherwise.
 
 | Option | Environment variable | Default |
 | --- | --- | --- |
 | `--host` | `SO_TAGGER_HOST` | `127.0.0.1` |
 | `--port` | `SO_TAGGER_PORT` | `8000` |
 | `--linear-dir` | `SO_TAGGER_LINEAR_DIR` | `artifacts/linear` |
-| `--version` | `SO_TAGGER_VERSION` | `dev` |
 
 A missing Tagger directory does not stop the server: that Tagger is reported as not loaded.
 Each `POST /suggest` logs one JSON line with the Tagger, the Title length, the number of
 Suggestions and the latency. Titles themselves are only logged at debug level.
+
+## Run with Docker
+
+Each Release has a Docker image on GitHub Container Registry with its Taggers built in. On a
+machine with only Docker, from a clone of the repository (or with just
+[`compose.yaml`](compose.yaml)):
+
+```bash
+docker compose up                        # pulls ghcr.io/thomas-hinton/stackoverflow-tag-prediction:latest
+```
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/suggest \
+  -H 'Content-Type: application/json' \
+  -d '{"title": "How do I parse JSON in Python?"}'
+```
+
+```json
+{"tagger": "linear", "version": "v0.1.0", "suggestions": [{"tag": "python", "score": 0.9997604176236493}, {"tag": "json", "score": 0.9902810532193043}]}
+```
+
+`SO_TAGGER_IMAGE_TAG=v0.1.0 docker compose up` runs a given Release instead of the latest one,
+and `SO_TAGGER_PORT` changes the port on the host. The service restarts unless stopped, and
+Docker marks it healthy once `GET /health` returns 200.
+
+To build the image yourself from a Release instead of pulling it:
+
+```bash
+RELEASE_TAG=v0.1.0 docker compose -f compose.yaml -f compose.build.yaml up --build
+# or, without Compose:
+docker build --build-arg RELEASE_TAG=v0.1.0 -t so-tagger:v0.1.0 .
+```
+
+The [`Dockerfile`](Dockerfile) installs the runtime dependencies only (`uv sync --frozen
+--no-dev`, no deep-learning stack) on a slim Python 3.12 base, downloads the Tagger archive of
+the Release given by `RELEASE_TAG` at build time, and runs `so-tagger serve` as a non-root user
+on port 8000. It carries a `HEALTHCHECK` on `/health` and OCI labels for the source repository,
+the Release version and the commit.
+
+## Releases
+
+Trained Taggers are published as GitHub Release assets, not committed
+([ADR 0002](docs/adr/0002-github-releases-for-model-artifacts.md)). Publishing a Release
+builds, smoke-tests and pushes its Docker image.
+
+```mermaid
+flowchart TD
+    taggerDir["Tagger directory<br/>artifacts/linear/"] -->|"so-tagger package"| assets["Release assets<br/>linear-tagger.tar.gz<br/>linear-metrics.json"]
+    assets -->|"gh release create"| release["Release vX.Y.Z"]
+    subgraph cdWorkflow ["CD workflow"]
+        build["Build image<br/>RELEASE_TAG=vX.Y.Z"] --> smoke["Smoke test<br/>/health and POST /suggest"]
+        smoke --> push["Push to GHCR<br/>vX.Y.Z and latest"]
+    end
+    release --> onRelease(["release: published"])
+    onRelease --> build
+    onDispatch(["workflow_dispatch"]) --> build
+    onCall(["workflow_call<br/>(training workflow)"]) --> build
+    release -. "Tagger archive downloaded at build time" .-> build
+    push --> up["docker compose up<br/>serves Suggestions"]
+```
+
+*Look at the dashed arrow: the image never contains a Tagger from the repository; whichever of
+the three triggers starts the CD workflow, the build downloads the Tagger archive from the Release.*
+
+### Release asset convention
+
+- Release tags follow semantic versioning: `vMAJOR.MINOR.PATCH` (e.g. `v0.1.0`).
+- For each Tagger kind it carries, a Release has two assets:
+  - `<kind>-tagger.tar.gz`: the Tagger directory, its files at the archive root;
+  - `<kind>-metrics.json`: the [metrics file](docs/metrics.md) of that Tagger on the test split.
+
+  For now only `linear-tagger.tar.gz` and `linear-metrics.json` exist; the Transformer tagger
+  adds `transformer-*` assets.
+
+`package` builds these assets from a Tagger directory. It writes the Release tag into the
+archived `metadata.json` as the Tagger's `version`, which `/health` and `/suggest` report; the
+Tagger directory itself is left untouched.
+
+```bash
+uv run so-tagger package --release-tag v0.1.0 --metrics metrics/linear-test.json
+# -> dist/linear-tagger.tar.gz and dist/linear-metrics.json
+```
+
+### Continuous delivery
+
+The [CD workflow](.github/workflows/cd.yml) builds the image of a Release, starts it, checks
+that `/health` answers 200 with the Release tag and that `POST /suggest` returns at least one
+Suggestion, then pushes `ghcr.io/thomas-hinton/stackoverflow-tag-prediction` with the tags
+`vX.Y.Z` and `latest`. It runs:
+
+- on `release: published`, when a Release is published by hand;
+- on `workflow_dispatch` with a `release_tag` input, to rebuild the image of an existing Release
+  (`gh workflow run cd.yml -f release_tag=v0.1.0`);
+- on `workflow_call` with a `release_tag` input. A Release created inside another workflow with
+  the default `GITHUB_TOKEN` triggers no `release` event, so the training workflow calls this
+  one explicitly.
+
+The image is built from the code at the Release tag. Rebuilding an older Release moves `latest`
+back to it.
+
+### Manual release (fallback)
+
+Until the training workflow publishes Releases, and whenever it cannot, a Release is made by
+hand from a clone on `main`:
+
+```bash
+uv run so-tagger train                    # artifacts/linear/
+uv run so-tagger evaluate                 # metrics/linear-test.json
+uv run so-tagger package --release-tag v0.1.0 --metrics metrics/linear-test.json
+gh release create v0.1.0 dist/linear-tagger.tar.gz dist/linear-metrics.json \
+  --target main --prerelease --title v0.1.0 --notes "Linear tagger trained by hand."
+```
+
+Publishing the Release starts the CD workflow; follow it with `gh run watch`. The first time
+an image is pushed, the GHCR package is created private: make it public once, in the package
+settings on GitHub (**Package settings → Change visibility → Public**), so that
+`docker compose up` works without `docker login`. GitHub offers no API for this step. The
+package is linked to the repository through the image's `org.opencontainers.image.source`
+label.
 
 ## Data exploration
 
@@ -159,7 +278,8 @@ dataset. The Tagger contract suite runs against both Taggers; the Transformer ta
 randomly initialised DistilBERT built in the test, so no checkpoint is downloaded. The only
 `slow` test fine-tunes the real `distilbert-base-uncased` checkpoint.
 
-CI runs the same commands on every pull request to `main` and on every push to `main`.
+CI runs the same commands on every pull request to `main` and on every push to `main`, and
+lints the `Dockerfile` with [hadolint](https://github.com/hadolint/hadolint).
 
 ## Contributing
 

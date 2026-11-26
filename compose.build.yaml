@@ -1,0 +1,10 @@
+# Local build override: builds the image from the Release given by RELEASE_TAG instead of
+# pulling it from GHCR.
+#   RELEASE_TAG=v0.1.0 docker compose -f compose.yaml -f compose.build.yaml up --build
+services:
+  api:
+    image: so-tagger:${RELEASE_TAG:?set RELEASE_TAG to the Release to build, e.g. v0.1.0}
+    build:
+      context: .
+      args:
+        RELEASE_TAG: ${RELEASE_TAG}

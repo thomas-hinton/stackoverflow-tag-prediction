@@ -18,14 +18,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from so_tagger import __version__
 from so_tagger.suggestion_policy import MAX_SUGGESTIONS, MIN_SUGGESTIONS
-from so_tagger.taggers import TAGGER_KINDS, Tagger, load_tagger
+from so_tagger.taggers import DEV_VERSION, TAGGER_KINDS, Tagger, load_tagger
 from so_tagger.taggers.base import METADATA_FILE
 
 DEFAULT_TAGGER: Final = "linear"
 MAX_TITLE_LENGTH = 300
 """Longest accepted Title, in characters after stripping. Real Titles are far shorter."""
-DEV_VERSION = "dev"
-"""The served version when the Taggers do not come from a Release."""
 
 TaggerKind = Literal["linear", "transformer"]
 """The known Tagger kinds; a test keeps it in sync with ``TAGGER_KINDS``."""
@@ -40,7 +38,7 @@ ranked by descending Score, where a Score is the estimated probability that the 
 Tags whose Score passes the Tagger's tuned Score cut-off are kept, never fewer than
 {MIN_SUGGESTIONS} and never more than {MAX_SUGGESTIONS}.
 
-`GET /health` tells which Taggers are loaded and which version is served.
+`GET /health` tells which Taggers are loaded and which version of each is served.
 """
 
 
@@ -99,7 +97,7 @@ class SuggestResponse(BaseModel):
             "examples": [
                 {
                     "tagger": "linear",
-                    "version": "dev",
+                    "version": "v0.1.0",
                     "suggestions": [
                         {"tag": "python", "score": 0.97},
                         {"tag": "json", "score": 0.91},
@@ -111,7 +109,10 @@ class SuggestResponse(BaseModel):
 
     tagger: TaggerKind = Field(description="Tagger that produced the Suggestions.")
     version: str = Field(
-        description=f"Served Tagger version: the Release tag, or '{DEV_VERSION}' outside a Release."
+        description=(
+            "Version of the Tagger that answered: the Release tag it was packaged for, "
+            f"or '{DEV_VERSION}' outside a Release."
+        )
     )
     suggestions: list[SuggestionModel] = Field(
         min_length=MIN_SUGGESTIONS,
@@ -126,7 +127,12 @@ class TaggerStatus(BaseModel):
     """Whether one Tagger kind is loaded, and what it serves."""
 
     loaded: bool = Field(description="Whether this Tagger answers `POST /suggest`.")
-    version: str = Field(description="Served version: the Release tag, or 'dev'.")
+    version: str | None = Field(
+        description=(
+            f"Version of the loaded Tagger: its Release tag, or '{DEV_VERSION}' outside a "
+            "Release; null when not loaded."
+        )
+    )
     n_supported_tags: int = Field(
         ge=0, description="Number of Supported tags the Tagger can suggest; 0 when not loaded."
     )
@@ -141,8 +147,8 @@ class HealthResponse(BaseModel):
                 {
                     "status": "ok",
                     "taggers": {
-                        "linear": {"loaded": True, "version": "dev", "n_supported_tags": 86},
-                        "transformer": {"loaded": False, "version": "dev", "n_supported_tags": 0},
+                        "linear": {"loaded": True, "version": "v0.1.0", "n_supported_tags": 86},
+                        "transformer": {"loaded": False, "version": None, "n_supported_tags": 0},
                     },
                 }
             ]
@@ -159,12 +165,12 @@ class ErrorResponse(BaseModel):
     detail: str = Field(description="What went wrong.")
 
 
-def create_app(taggers: Mapping[str, Tagger], *, version: str = DEV_VERSION) -> FastAPI:
+def create_app(taggers: Mapping[str, Tagger]) -> FastAPI:
     """Build the API around already loaded Taggers, keyed by Tagger kind.
 
     A known kind missing from ``taggers`` is reported as not loaded: requests for it get a
-    503. ``version`` is the served Tagger version, the Release tag when the Taggers come from
-    a Release.
+    503. Each Tagger reports its own version, read from its metadata: the Release tag it was
+    packaged for, or ``dev``.
     """
     unknown = set(taggers) - set(TAGGER_KINDS)
     if unknown:
@@ -204,7 +210,7 @@ def create_app(taggers: Mapping[str, Tagger], *, version: str = DEV_VERSION) -> 
         _log_request(request, len(suggestions), start)
         return SuggestResponse(
             tagger=request.tagger,
-            version=version,
+            version=tagger.metadata.version,
             suggestions=[SuggestionModel(tag=s.tag, score=s.score) for s in suggestions],
         )
 
@@ -224,14 +230,7 @@ def create_app(taggers: Mapping[str, Tagger], *, version: str = DEV_VERSION) -> 
         healthy = DEFAULT_TAGGER in taggers
         body = HealthResponse(
             status="ok" if healthy else "unavailable",
-            taggers={
-                kind: TaggerStatus(
-                    loaded=kind in taggers,
-                    version=version,
-                    n_supported_tags=len(taggers[kind].supported_tags) if kind in taggers else 0,
-                )
-                for kind in TAGGER_KINDS
-            },
+            taggers={kind: _tagger_status(taggers.get(kind)) for kind in TAGGER_KINDS},
         )
         return JSONResponse(
             body.model_dump(),
@@ -239,6 +238,14 @@ def create_app(taggers: Mapping[str, Tagger], *, version: str = DEV_VERSION) -> 
         )
 
     return app
+
+
+def _tagger_status(tagger: Tagger | None) -> TaggerStatus:
+    if tagger is None:
+        return TaggerStatus(loaded=False, version=None, n_supported_tags=0)
+    return TaggerStatus(
+        loaded=True, version=tagger.metadata.version, n_supported_tags=len(tagger.supported_tags)
+    )
 
 
 def _log_request(request: SuggestRequest, n_suggestions: int | None, start: float) -> None:

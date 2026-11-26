@@ -1,13 +1,15 @@
 import csv
 import re
+import tarfile
 from pathlib import Path
 
 import pytest
 
 from so_tagger.config import load_config
 from so_tagger.dataset import prepare_questions, read_raw_questions
+from so_tagger.release import package_tagger
 from so_tagger.split import split_questions
-from so_tagger.taggers import Tagger, train_tagger
+from so_tagger.taggers import Tagger, load_tagger, train_tagger
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 FIXTURE_DATASET = FIXTURES / "stackoverflow_posts_fixture.csv"
@@ -129,3 +131,25 @@ def linear_tagger(tmp_path_factory: pytest.TempPathFactory, fixture_config_toml:
         dataset.questions, dataset.supported_tags, config.split, config.seed
     )
     return train_tagger("linear", dataset_split.train, dataset_split.validation, config)
+
+
+RELEASE_TAG = "v1.2.3"
+
+
+def extract_archive(archive: Path, directory: Path) -> Path:
+    """Extract a Tagger archive the way the Docker image does: files at the directory root."""
+    directory.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(archive) as tar:
+        tar.extractall(directory, filter="data")
+    return directory
+
+
+@pytest.fixture(scope="session")
+def released_linear_tagger(
+    tmp_path_factory: pytest.TempPathFactory, linear_tagger: Tagger
+) -> Tagger:
+    """The fixture Linear tagger packaged for Release ``RELEASE_TAG``, then extracted and loaded."""
+    root = tmp_path_factory.mktemp("release")
+    linear_tagger.save(root / "trained")
+    assets = package_tagger(root / "trained", RELEASE_TAG, root / "dist")
+    return load_tagger(extract_archive(assets.archive, root / "extracted"))

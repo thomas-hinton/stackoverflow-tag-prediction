@@ -8,7 +8,7 @@ from pathlib import Path
 from so_tagger.config import ProjectConfig
 from so_tagger.domain import Question
 from so_tagger.evaluation import tune_score_cutoff
-from so_tagger.taggers.base import ScoreMatrix, Tagger, TaggerError, TaggerMetadata
+from so_tagger.taggers.base import DEV_VERSION, ScoreMatrix, Tagger, TaggerError, TaggerMetadata
 
 # Each kind's module is imported only when that kind is used, so that the base install, which
 # lacks the `transformer` extra (torch, transformers), still trains and serves the Linear tagger.
@@ -24,6 +24,7 @@ TAGGER_KINDS: tuple[str, ...] = tuple(_TAGGERS)
 """The Tagger kinds the project can train and load."""
 
 __all__ = [
+    "DEV_VERSION",
     "TAGGER_KINDS",
     "ScoreMatrix",
     "Tagger",
