@@ -1,5 +1,5 @@
 # Project configuration, versioned with the code.
-# Later tickets add sections here: transformer tagger and quality gate.
+# Later tickets add sections here: quality gate.
 
 # Seeds every random component: the split and the Taggers.
 seed = 42
@@ -26,4 +26,23 @@ sublinear_tf = true
 C = 10.0
 class_weight = "balanced"   # "balanced" or "none"
 max_iter = 1000
+# No score_cutoff here: `train` tunes it on the validation split and saves it with the Tagger.
+
+[transformer_tagger]
+# DistilBERT fine-tuned on CPU with a multi-label head: one sigmoid output per Supported tag,
+# binary cross-entropy loss. Rationale: docs/adr/0001. Needs the `transformer` extra:
+# `uv sync --extra transformer`.
+checkpoint = "distilbert-base-uncased"   # Hugging Face Hub id or local directory
+# 86 sigmoid outputs trained on 2,870 Titles: with 5e-5, batch 32 and patience 1 the model
+# stays on the "predict the Tag frequencies" plateau (validation micro-F1 0.13) and stops early.
+# A higher rate, twice as many steps per epoch and patience 2 get past it (micro-F1 0.53).
+learning_rate = 1e-4        # AdamW, linear schedule with warmup
+batch_size = 16
+epochs = 10                 # maximum; the epoch with the best validation micro-F1 is kept
+warmup_ratio = 0.1
+weight_decay = 0.01
+patience = 2                # epochs without improvement before early stopping
+max_length_percentile = 99  # truncate Titles at the token length covering this percentile
+inference_batch_size = 128
+num_threads = 0             # CPU threads for PyTorch; 0 keeps PyTorch's default
 # No score_cutoff here: `train` tunes it on the validation split and saves it with the Tagger.
