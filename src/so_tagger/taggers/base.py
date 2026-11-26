@@ -2,8 +2,9 @@
 
 A Tagger is trained from the training Questions (and the validation Questions, used for
 tuning) plus the project configuration. It exposes its Supported tags, fixed at training time,
-and its Score cut-off; it scores batches of Titles and turns one Title into a Suggestion list
-through the shared Suggestion policy. It is saved to a directory holding its model files and a
+and its Score cut-off, tuned on the validation split by ``so_tagger.taggers.train_tagger``; it
+scores batches of Titles and turns one Title into a Suggestion list through the shared
+Suggestion policy. It is saved to a directory holding its model files and a
 ``metadata.json`` file, and loaded back with ``so_tagger.taggers.load_tagger``.
 
 A new Tagger kind subclasses ``Tagger`` and implements ``train``, ``score``, ``_save_model`` and
@@ -13,7 +14,7 @@ A new Tagger kind subclasses ``Tagger`` and implements ``train``, ``score``, ``_
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, ClassVar, Self
@@ -42,9 +43,18 @@ class TaggerMetadata:
 
     kind: str
     supported_tags: tuple[str, ...]
-    score_cutoff: float
+    score_cutoff: float | None
+    """None until ``train_tagger`` tunes it on the validation split."""
+    validation_micro_f1: float | None
+    """The micro-F1 the tuned Score cut-off reaches on the validation split."""
     frequency_cutoff: int
     training_config: dict[str, Any]
+    """The hyperparameters: the Tagger's section of the configuration."""
+    seed: int
+    split_sizes: dict[str, int]
+    """Number of train and validation Questions the Tagger was trained and tuned on."""
+    training_seconds: float | None
+    """Wall-clock time of training plus Score cut-off tuning."""
     package_version: str
     created_at: str
 
@@ -53,17 +63,24 @@ class TaggerMetadata:
         cls,
         kind: str,
         train: Sequence[Question],
-        score_cutoff: float,
+        validation: Sequence[Question],
         config: ProjectConfig,
         training_config: dict[str, Any],
     ) -> Self:
-        """Metadata of a Tagger trained now: its Supported tags are the training Tags."""
+        """Metadata of a Tagger trained now: its Supported tags are the training Tags.
+
+        The Score cut-off is left untuned.
+        """
         return cls(
             kind=kind,
             supported_tags=tuple(sorted({tag for question in train for tag in question.tags})),
-            score_cutoff=score_cutoff,
+            score_cutoff=None,
+            validation_micro_f1=None,
             frequency_cutoff=config.data.frequency_cutoff,
             training_config=training_config,
+            seed=config.seed,
+            split_sizes={"train": len(train), "validation": len(validation)},
+            training_seconds=None,
             package_version=__version__,
             created_at=datetime.now(UTC).isoformat(timespec="seconds"),
         )
@@ -82,9 +99,14 @@ class TaggerMetadata:
                 f"No Tagger in {directory}: {METADATA_FILE} is missing; run `train` first."
             ) from error
         try:
-            return cls(**{**raw, "supported_tags": tuple(raw["supported_tags"])})
+            metadata = cls(**{**raw, "supported_tags": tuple(raw["supported_tags"])})
         except (KeyError, TypeError) as error:
-            raise TaggerError(f"{path} is not valid Tagger metadata: {error}") from error
+            raise TaggerError(
+                f"{path} is not valid Tagger metadata ({error}); run `train` again."
+            ) from error
+        if metadata.score_cutoff is None:
+            raise TaggerError(f"{path} has no tuned Score cut-off; run `train` again.")
+        return metadata
 
 
 class Tagger(ABC):
@@ -128,7 +150,23 @@ class Tagger(ABC):
 
     @property
     def score_cutoff(self) -> float:
+        """The tuned Score cut-off; raises ``TaggerError`` before tuning."""
+        if self._metadata.score_cutoff is None:
+            raise TaggerError(
+                f"The {self.kind} Tagger has no Score cut-off yet: train it with `train_tagger`."
+            )
         return self._metadata.score_cutoff
+
+    def record_tuning(
+        self, score_cutoff: float, validation_micro_f1: float, training_seconds: float
+    ) -> None:
+        """Store the Score cut-off tuned on the validation split, and the training time."""
+        self._metadata = replace(
+            self._metadata,
+            score_cutoff=score_cutoff,
+            validation_micro_f1=validation_micro_f1,
+            training_seconds=round(training_seconds, 3),
+        )
 
     def suggest(self, title: str) -> SuggestionList:
         """The Suggestion list for one Title, from its Scores and the Suggestion policy."""

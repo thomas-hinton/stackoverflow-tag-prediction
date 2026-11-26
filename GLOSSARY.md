@@ -45,7 +45,7 @@ The estimated probability that a Suggestion applies to the Title.
 _Avoid_: Confidence, weight, logit
 
 **Score cut-off**:
-The minimum Score a Suggestion needs to enter the Suggestion list; each Tagger has its own.
+The minimum Score a Suggestion needs to enter the Suggestion list; each Tagger has its own, tuned on the validation split for the best micro-F1.
 _Avoid_: Threshold (alone), confidence level
 
 **Suggestion policy**:
@@ -55,3 +55,9 @@ _Avoid_: Post-processing, decoding
 **Suggestion list**:
 The ranked Suggestions returned for one Title: those whose Score passes the cut-off, never fewer than one and never more than five.
 _Avoid_: Top-k, prediction set
+
+### Evaluation
+
+**Metrics file**:
+The JSON record `evaluate` writes for one Tagger on one split: its scores plus what is needed to trace the run. Its schema is in `docs/metrics.md`.
+_Avoid_: Report, results, scores file

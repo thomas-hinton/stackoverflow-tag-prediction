@@ -25,7 +25,6 @@ sublinear_tf = true
 C = 10.0
 class_weight = "balanced"
 max_iter = 1000
-score_cutoff = 0.5
 """
 
 FIXTURE_SUPPORTED_TAGS = ("css", "javascript", "python", "sql")

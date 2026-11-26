@@ -32,12 +32,25 @@ uv run so-tagger prepare                  # raw CSV -> data/prepared/ (Questions
 uv run so-tagger split                    # -> data/splits/{train,validation,test}.jsonl
 uv run so-tagger train --tagger linear    # -> artifacts/linear/ (model + metadata.json)
 uv run so-tagger suggest "How do I parse JSON in Python?"
+uv run so-tagger evaluate                 # -> metrics/linear-test.json
 ```
 
 ```text
 Tag     Score
 python  1.000
 json    0.990
+```
+
+`train` tunes the Score cut-off on the validation split and saves it with the Tagger; `evaluate`
+measures the Tagger on the test split and writes a metrics file. The tuning rule and the metrics
+file schema are documented in [docs/metrics.md](docs/metrics.md). The Linear tagger's baseline
+on the test split:
+
+```text
+micro-F1  0.509  (precision 0.527, recall 0.491)
+macro-F1  0.463
+P@1 0.611  R@1 0.453  P@3 0.306  R@3 0.619  P@5 0.211  R@5 0.694
+Suggestions per Question: 1.47
 ```
 
 Add `--json` to `suggest` for machine-readable output. Every command has `--help`, takes its
@@ -91,6 +104,7 @@ still happens on every pull request: the author posts a self-review comment befo
 ## Design records
 
 - [Glossary](GLOSSARY.md): the domain language used in code, docs and issues.
+- [Score cut-off tuning and the metrics file](docs/metrics.md).
 - Architecture decisions:
   - [ADR 0001: DistilBERT fine-tuned on CPU](docs/adr/0001-distilbert-fine-tuned-on-cpu.md)
   - [ADR 0002: GitHub Releases for model artifacts](docs/adr/0002-github-releases-for-model-artifacts.md)

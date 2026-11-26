@@ -19,13 +19,21 @@ from so_tagger.dataset import (
     write_prepared,
 )
 from so_tagger.domain import SuggestionList
-from so_tagger.split import SplitError, split_questions, write_split
+from so_tagger.evaluation import (
+    EvaluationError,
+    current_git_commit,
+    evaluate_tagger,
+    metrics_report,
+    summary,
+)
+from so_tagger.split import SPLIT_NAMES, SplitError, split_questions, write_split
 from so_tagger.taggers import TAGGER_KINDS, TaggerError, load_tagger, train_tagger
 
 DEFAULT_RAW_PATH = Path("data/stackoverflow_posts.csv")
 DEFAULT_PREPARED_DIR = Path("data/prepared")
 DEFAULT_SPLITS_DIR = Path("data/splits")
 DEFAULT_TAGGERS_DIR = Path("artifacts")
+DEFAULT_METRICS_DIR = Path("metrics")
 
 app = typer.Typer(
     help="Suggest Tags for a StackOverflow Question from its Title.",
@@ -43,6 +51,14 @@ def _known_tagger_kind(kind: str) -> str:
             f"Unknown Tagger kind '{kind}'; expected one of: {', '.join(TAGGER_KINDS)}."
         )
     return kind
+
+
+def _known_split(name: str) -> str:
+    if name not in SPLIT_NAMES:
+        raise typer.BadParameter(
+            f"Unknown split '{name}'; expected one of: {', '.join(SPLIT_NAMES)}."
+        )
+    return name
 
 
 def _non_empty_title(title: str) -> str:
@@ -66,7 +82,7 @@ def _user_errors() -> Iterator[None]:
     """Turn expected failures (bad configuration, bad data) into a clean error and exit code."""
     try:
         yield
-    except (ConfigError, DatasetError, SplitError, TaggerError) as error:
+    except (ConfigError, DatasetError, EvaluationError, SplitError, TaggerError) as error:
         typer.echo(f"Error: {error}", err=True)
         raise typer.Exit(code=1) from error
 
@@ -159,7 +175,10 @@ def train(
 ) -> None:
     """Train a Tagger on the training split and save it as a Tagger directory.
 
-    Hyperparameters and the Score cut-off come from the Tagger's section of the configuration.
+    Hyperparameters come from the Tagger's section of the configuration. The Score cut-off is
+    then tuned on the validation split: the cut-off from 0.01 to 0.99 (step 0.01) whose
+    Suggestion lists reach the best micro-F1, the smallest one on ties. The test split is never
+    read.
     """
     directory = output_dir or DEFAULT_TAGGERS_DIR / tagger
     with _user_errors():
@@ -170,9 +189,64 @@ def train(
         trained.save(directory)
     typer.echo(
         f"Trained the {tagger} Tagger on {len(train_set)} Questions "
-        f"({len(trained.supported_tags)} Supported tags, Score cut-off {trained.score_cutoff})."
+        f"({len(trained.supported_tags)} Supported tags)."
+    )
+    typer.echo(
+        f"Tuned the Score cut-off on {len(validation_set)} validation Questions: "
+        f"{trained.score_cutoff:.2f} (validation micro-F1 "
+        f"{trained.metadata.validation_micro_f1:.3f})."
     )
     typer.echo(f"Tagger saved to {directory}")
+
+
+@app.command()
+def evaluate(
+    tagger: TaggerOption = "linear",
+    tagger_dir: Annotated[
+        Path | None,
+        typer.Option(help="Tagger directory written by `train`. Defaults to artifacts/<tagger>."),
+    ] = None,
+    split_name: Annotated[
+        str,
+        typer.Option(
+            "--split",
+            help=f"Split to evaluate on: {', '.join(SPLIT_NAMES)}.",
+            callback=_known_split,
+        ),
+    ] = "test",
+    splits_dir: Annotated[
+        Path, typer.Option(help="Split written by `split`.")
+    ] = DEFAULT_SPLITS_DIR,
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            help="Metrics file to write. Defaults to metrics/<tagger>-<split>.json.",
+            dir_okay=False,
+        ),
+    ] = None,
+) -> None:
+    """Measure a saved Tagger on a split and write a metrics file (JSON).
+
+    Suggestions come from the Suggestion policy at the Tagger's tuned Score cut-off. The file
+    holds micro and macro scores, precision@k and recall@k, per-Tag scores and everything
+    needed to trace the run; its schema is documented in docs/metrics.md.
+    """
+    metrics_path = output or DEFAULT_METRICS_DIR / f"{tagger}-{split_name}.json"
+    with _user_errors():
+        loaded = load_tagger(tagger_dir or DEFAULT_TAGGERS_DIR / tagger, kind=tagger)
+        questions = read_questions(splits_dir / f"{split_name}.jsonl")
+        metrics = evaluate_tagger(loaded, questions)
+        report = metrics_report(loaded, split_name, len(questions), metrics, current_git_commit())
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    metrics_path.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    typer.echo(
+        f"Evaluated the {tagger} Tagger on {len(questions)} {split_name} Questions "
+        f"(Score cut-off {loaded.score_cutoff:.2f})."
+    )
+    typer.echo(summary(metrics))
+    typer.echo(f"Metrics written to {metrics_path}")
 
 
 @app.command()
