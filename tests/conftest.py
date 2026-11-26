@@ -48,6 +48,10 @@ patience = 1
 max_length_percentile = 99
 inference_batch_size = 16
 num_threads = 2
+
+[quality_gate.min_test_micro_f1]
+linear = 0.20
+transformer = 0.20
 """
 
 FIXTURE_SUPPORTED_TAGS = ("css", "javascript", "python", "sql")
