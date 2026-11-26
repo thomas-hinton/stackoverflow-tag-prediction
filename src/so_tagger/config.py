@@ -35,7 +35,7 @@ class SplitConfig:
 
 @dataclass(frozen=True, slots=True)
 class LinearTaggerConfig:
-    """Hyperparameters of the Linear tagger and its provisional Score cut-off."""
+    """Hyperparameters of the Linear tagger (its Score cut-off is tuned, not configured)."""
 
     word_ngram_range: tuple[int, int]
     char_ngram_range: tuple[int, int]
@@ -44,11 +44,8 @@ class LinearTaggerConfig:
     C: float
     class_weight: str | None
     max_iter: int
-    score_cutoff: float
 
     def __post_init__(self) -> None:
-        if not 0.0 <= self.score_cutoff <= 1.0:
-            raise ConfigError(f"'score_cutoff' must be in [0, 1], got {self.score_cutoff}.")
         if self.C <= 0:
             raise ConfigError(f"'C' must be positive, got {self.C}.")
 
@@ -94,7 +91,6 @@ def _linear_tagger(section: dict[str, Any]) -> LinearTaggerConfig:
         C=_float(section, "C"),
         class_weight=None if class_weight == "none" else class_weight,
         max_iter=_int(section, "max_iter", minimum=1),
-        score_cutoff=_float(section, "score_cutoff"),
     )
 
 

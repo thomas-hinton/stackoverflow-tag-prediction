@@ -12,7 +12,7 @@ def test_project_config_loads_with_the_documented_defaults() -> None:
 
     assert config.split.ratios() == (0.70, 0.15, 0.15)
     assert config.data.frequency_cutoff == 20
-    assert 0.0 <= config.linear_tagger.score_cutoff <= 1.0
+    assert config.linear_tagger.C > 0
 
 
 def test_split_ratios_must_sum_to_one(tmp_path: Path) -> None:

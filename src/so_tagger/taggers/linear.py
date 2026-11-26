@@ -43,9 +43,9 @@ class LinearTagger(Tagger):
         metadata = TaggerMetadata.at_training(
             cls.kind,
             train,
-            settings.score_cutoff,
+            validation,
             config,
-            training_config={**asdict(settings), "seed": config.seed},
+            training_config=asdict(settings),
         )
         tfidf = {"min_df": settings.min_df, "sublinear_tf": settings.sublinear_tf}
         pipeline = Pipeline(

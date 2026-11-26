@@ -12,9 +12,14 @@ import pytest
 import so_tagger
 from so_tagger.config import load_config
 from so_tagger.dataset import prepare_questions, read_raw_questions
+from so_tagger.evaluation import SCORE_CUTOFF_GRID
 from so_tagger.split import split_questions
-from so_tagger.suggestion_policy import MAX_SUGGESTIONS, MIN_SUGGESTIONS
-from so_tagger.taggers import TAGGER_KINDS, Tagger, load_tagger, train_tagger
+from so_tagger.suggestion_policy import (
+    MAX_SUGGESTIONS,
+    MIN_SUGGESTIONS,
+    apply_suggestion_policy,
+)
+from so_tagger.taggers import TAGGER_KINDS, Tagger, TaggerError, load_tagger, train_tagger
 from tests.conftest import FIXTURE_CONFIG, FIXTURE_DATASET, FIXTURE_SUPPORTED_TAGS
 
 TITLES = [
@@ -96,7 +101,37 @@ def test_saved_directory_holds_the_tagger_metadata(tagger: Tagger, tmp_path: Pat
     assert metadata["kind"] == tagger.kind
     assert tuple(metadata["supported_tags"]) == FIXTURE_SUPPORTED_TAGS
     assert metadata["score_cutoff"] == tagger.score_cutoff
+    assert 0.0 <= metadata["validation_micro_f1"] <= 1.0
     assert metadata["frequency_cutoff"] == 5
+    assert metadata["seed"] == 7
+    assert metadata["split_sizes"] == {"train": 50, "validation": 11}
+    assert metadata["training_seconds"] > 0
     assert metadata["package_version"] == so_tagger.__version__
     assert isinstance(metadata["training_config"], dict) and metadata["training_config"]
     assert datetime.fromisoformat(metadata["created_at"]).tzinfo is not None
+
+
+def test_a_loaded_tagger_exposes_the_tuned_cutoff_and_suggest_uses_it(
+    tagger: Tagger, tmp_path: Path
+) -> None:
+    tagger.save(tmp_path / "tagger")
+
+    loaded = load_tagger(tmp_path / "tagger")
+
+    assert loaded.score_cutoff in SCORE_CUTOFF_GRID
+    assert loaded.score_cutoff == tagger.score_cutoff
+    for title in [*TITLES, OFF_TOPIC_TITLE]:
+        scores = dict(zip(loaded.supported_tags, loaded.score([title])[0].tolist(), strict=True))
+        assert loaded.suggest(title) == apply_suggestion_policy(scores, loaded.score_cutoff)
+
+
+def test_a_tagger_directory_without_a_tuned_cutoff_is_rejected(
+    tagger: Tagger, tmp_path: Path
+) -> None:
+    tagger.save(tmp_path / "tagger")
+    path = tmp_path / "tagger" / "metadata.json"
+    metadata = json.loads(path.read_text(encoding="utf-8"))
+    path.write_text(json.dumps({**metadata, "score_cutoff": None}), encoding="utf-8")
+
+    with pytest.raises(TaggerError, match="no tuned Score cut-off"):
+        load_tagger(tmp_path / "tagger")

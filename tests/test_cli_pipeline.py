@@ -144,9 +144,11 @@ def test_split_fails_clearly_when_a_supported_tag_is_absent_from_training(
     assert not (tmp_path / "splits" / "train.jsonl").exists()
 
 
-def train(tmp_path: Path, config: Path) -> Path:
-    splits = split(prepare(tmp_path, config), tmp_path / "splits", config)
-    tagger_dir = tmp_path / "tagger"
+def train(tmp_path: Path, config: Path, tagger_dir: Path | None = None) -> Path:
+    splits = tmp_path / "splits"
+    if not splits.exists():
+        split(prepare(tmp_path, config), splits, config)
+    tagger_dir = tagger_dir or tmp_path / "tagger"
     invoke(
         "train",
         "--tagger",
@@ -247,7 +249,142 @@ def test_prepare_keeps_the_tag_named_null(tmp_path: Path, fixture_config: Path) 
     }
 
 
-@pytest.mark.parametrize("command", [["train"], ["suggest", "Any title"]])
+def test_train_tunes_the_cutoff_without_ever_reading_the_test_split(
+    tmp_path: Path, fixture_config: Path
+) -> None:
+    first = json.loads((train(tmp_path, fixture_config) / "metadata.json").read_text("utf-8"))
+    # Replace the test split with garbage: any read of it would now fail.
+    (tmp_path / "splits" / "test.jsonl").write_text("not a Question\n", encoding="utf-8")
+
+    second_dir = train(tmp_path, fixture_config, tmp_path / "second")
+    second = json.loads((second_dir / "metadata.json").read_text("utf-8"))
+
+    assert second["score_cutoff"] == first["score_cutoff"]
+    assert second["validation_micro_f1"] == first["validation_micro_f1"]
+
+
+def test_train_logs_the_tuned_cutoff_and_its_validation_micro_f1(
+    tmp_path: Path, fixture_config: Path
+) -> None:
+    splits = split(prepare(tmp_path, fixture_config), tmp_path / "splits", fixture_config)
+
+    result = invoke(
+        "train", "--splits-dir", splits, "--output-dir", tmp_path / "t", "--config", fixture_config
+    )
+
+    metadata = json.loads((tmp_path / "t" / "metadata.json").read_text("utf-8"))
+    assert f"Score cut-off on 11 validation Questions: {metadata['score_cutoff']:.2f}" in (
+        result.output
+    )
+    assert f"validation micro-F1 {metadata['validation_micro_f1']:.3f}" in result.output
+
+
+METRICS_KEYS = {
+    "schema_version",
+    "tagger",
+    "split",
+    "metrics",
+    "conventions",
+    "score_cutoff",
+    "validation_micro_f1",
+    "frequency_cutoff",
+    "n_supported_tags",
+    "split_sizes",
+    "hyperparameters",
+    "seed",
+    "training_seconds",
+    "git_commit",
+    "package_version",
+    "tagger_package_version",
+    "tagger_created_at",
+    "created_at",
+}
+
+
+def test_evaluate_writes_a_complete_metrics_file_and_prints_a_summary(
+    tmp_path: Path, fixture_config: Path
+) -> None:
+    tagger_dir = train(tmp_path, fixture_config)
+    metrics_path = tmp_path / "metrics" / "linear-test.json"
+
+    result = invoke(
+        "evaluate",
+        "--tagger-dir",
+        tagger_dir,
+        "--splits-dir",
+        tmp_path / "splits",
+        "--output",
+        metrics_path,
+    )
+
+    report = json.loads(metrics_path.read_text(encoding="utf-8"))
+    assert set(report) == METRICS_KEYS
+    assert report["schema_version"] == 1
+    assert (report["tagger"], report["split"]) == ("linear", "test")
+    assert report["split_sizes"] == {"train": 50, "validation": 11, "test": 11}
+    assert (report["frequency_cutoff"], report["n_supported_tags"], report["seed"]) == (5, 4, 7)
+    assert report["hyperparameters"]["C"] == 10.0
+    assert 0.0 < report["score_cutoff"] < 1.0
+    assert 0.0 <= report["validation_micro_f1"] <= 1.0
+    assert report["training_seconds"] > 0
+    assert report["git_commit"] is None or len(report["git_commit"]) == 40
+
+    metrics = report["metrics"]
+    for key in ("micro_f1", "micro_precision", "micro_recall", "macro_f1"):
+        assert 0.0 <= metrics[key] <= 1.0
+    for key in ("precision_at_k", "recall_at_k"):
+        assert set(metrics[key]) == {"1", "3", "5"}
+        assert all(0.0 <= value <= 1.0 for value in metrics[key].values())
+    assert 1.0 <= metrics["mean_suggestions_per_question"] <= 5.0
+    assert set(metrics["per_tag"]) == set(FIXTURE_SUPPORTED_TAGS)
+    for tag_metrics in metrics["per_tag"].values():
+        assert set(tag_metrics) == {"precision", "recall", "f1", "support"}
+    assert sum(t["support"] for t in metrics["per_tag"].values()) >= 11
+
+    assert "Evaluated the linear Tagger on 11 test Questions" in result.output
+    assert f"micro-F1  {metrics['micro_f1']:.3f}" in result.output
+    assert "P@1" in result.output and "R@5" in result.output
+    assert f"Metrics written to {metrics_path}" in result.output
+
+
+def test_evaluate_on_another_split_records_its_size(tmp_path: Path, fixture_config: Path) -> None:
+    tagger_dir = train(tmp_path, fixture_config)
+    metrics_path = tmp_path / "validation.json"
+
+    invoke(
+        "evaluate",
+        "--tagger-dir",
+        tagger_dir,
+        "--splits-dir",
+        tmp_path / "splits",
+        "--split",
+        "validation",
+        "--output",
+        metrics_path,
+    )
+
+    report = json.loads(metrics_path.read_text(encoding="utf-8"))
+    assert report["split"] == "validation"
+    assert report["split_sizes"] == {"train": 50, "validation": 11}
+    # On the split it was tuned on, the Tagger reproduces its validation micro-F1.
+    assert report["metrics"]["micro_f1"] == report["validation_micro_f1"]
+
+
+def test_evaluate_rejects_an_unknown_split() -> None:
+    result = runner.invoke(app, ["evaluate", "--split", "holdout"])
+
+    assert result.exit_code == 2
+    assert "Unknown split 'holdout'" in result.output
+
+
+def test_evaluate_fails_clearly_without_a_trained_tagger(tmp_path: Path) -> None:
+    result = runner.invoke(app, ["evaluate", "--tagger-dir", str(tmp_path / "none")])
+
+    assert result.exit_code == 1
+    assert "run `train` first" in result.output
+
+
+@pytest.mark.parametrize("command", [["train"], ["suggest", "Any title"], ["evaluate"]])
 def test_an_unknown_tagger_kind_is_rejected_with_the_valid_kinds(command: list[str]) -> None:
     result = runner.invoke(app, [*command, "--tagger", "forest"])
 

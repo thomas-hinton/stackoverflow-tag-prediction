@@ -26,5 +26,4 @@ sublinear_tf = true
 C = 10.0
 class_weight = "balanced"   # "balanced" or "none"
 max_iter = 1000
-# Provisional: #6 replaces it with a value tuned on the validation split.
-score_cutoff = 0.5
+# No score_cutoff here: `train` tunes it on the validation split and saves it with the Tagger.
