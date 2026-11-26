@@ -7,7 +7,7 @@ zone. Animations and the text caret are disabled while taking the screenshot.
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from so_tagger.screenshots.captures import Capture, Click, Fill, WaitFor
 
@@ -67,7 +67,11 @@ def _take_screenshot(browser: "Browser", capture: Capture, url: str, path: Path)
     try:
         context.set_default_timeout(NAVIGATION_TIMEOUT_MS)
         page = context.new_page()
-        page.goto(url, wait_until="networkidle")
+        # Public pages such as GitHub keep background requests open: wait for "load" there.
+        settle: Literal["load", "networkidle"] = (
+            "networkidle" if capture.server is not None else "load"
+        )
+        page.goto(url, wait_until=settle)
         for action in capture.actions:
             match action:
                 case Fill(selector=selector, value=value):
@@ -76,7 +80,7 @@ def _take_screenshot(browser: "Browser", capture: Capture, url: str, path: Path)
                     page.click(selector)
                 case WaitFor(selector=selector):
                     page.wait_for_selector(selector, state="visible")
-        page.wait_for_load_state("networkidle")
+        page.wait_for_load_state(settle)
         target = page.locator(capture.selector) if capture.selector else page
         target.screenshot(path=path, animations="disabled", caret="hide")
     finally:

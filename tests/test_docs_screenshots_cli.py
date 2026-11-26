@@ -1,11 +1,12 @@
-"""Seam: the `docs-screenshots` command, driven through its CLI."""
+"""Seam 6: the `docs-screenshots` command, driven through its CLI."""
 
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from so_tagger.screenshots.cli import MAX_IMAGE_BYTES, app
+from so_tagger.screenshots.captures import SERVERS
+from so_tagger.screenshots.cli import MAX_IMAGE_BYTES, SERVER_APPS, app
 
 runner = CliRunner()
 
@@ -38,6 +39,10 @@ def test_list_shows_every_declared_capture_and_its_target(captures_file: Path) -
         "releases" in line and "https://github.com/" in line and "1024x768" in line
         for line in lines
     )
+
+
+def test_every_server_a_capture_can_target_can_be_started() -> None:
+    assert set(SERVER_APPS) == set(SERVERS)
 
 
 def test_check_passes_when_every_png_is_declared(captures_file: Path, tmp_path: Path) -> None:

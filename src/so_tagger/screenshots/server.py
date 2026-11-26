@@ -43,7 +43,7 @@ def running_server(
     port = sock.getsockname()[1]
     base_url = f"http://{HOST}:{port}"
 
-    server = uvicorn.Server(uvicorn.Config(app, log_level="warning", lifespan="off"))
+    server = uvicorn.Server(uvicorn.Config(app, log_level="warning"))
     thread = threading.Thread(target=server.run, kwargs={"sockets": [sock]}, daemon=True)
     thread.start()
     try:

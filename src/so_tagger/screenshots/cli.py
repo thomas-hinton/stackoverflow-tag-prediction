@@ -6,12 +6,13 @@ when one exceeds ``MAX_IMAGE_BYTES``. Needs the `docs` dependency group and Chro
 ``uv sync --group docs && uv run --group docs playwright install chromium``.
 """
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import Annotated, Final
 
 import typer
+from starlette.types import ASGIApp
 
 from so_tagger.api import create_app
 from so_tagger.config import ConfigError, load_config
@@ -23,7 +24,7 @@ from so_tagger.screenshots.captures import (
     CaptureError,
     load_captures,
 )
-from so_tagger.screenshots.images import optimise_png, orphan_images
+from so_tagger.screenshots.images import ImageTooLargeError, optimise_png, orphan_images
 from so_tagger.screenshots.server import ServerError, running_server
 from so_tagger.split import SplitError, split_questions
 from so_tagger.taggers import Tagger, TaggerError, train_tagger
@@ -38,6 +39,7 @@ app = typer.Typer(add_completion=False)
 
 @contextmanager
 def _user_errors() -> Iterator[None]:
+    """Turn expected failures (bad capture list, missing browser, ...) into a clean error."""
     try:
         yield
     except (
@@ -45,6 +47,7 @@ def _user_errors() -> Iterator[None]:
         CaptureError,
         ConfigError,
         DatasetError,
+        ImageTooLargeError,
         ServerError,
         SplitError,
         TaggerError,
@@ -138,23 +141,34 @@ def _capture(
 ) -> list[tuple[Path, int]]:
     servers = {capture.server for capture in captures if capture.server is not None}
     with ExitStack() as stack:
-        base_urls: dict[str, str] = {}
-        if "api" in servers:
-            typer.echo(f"Training the fixture Linear tagger on {dataset}...")
-            app = create_app({"linear": _fixture_tagger(dataset, config)})
-            base_urls["api"] = stack.enter_context(running_server(app))
-            typer.echo(f"API serving at {base_urls['api']}")
+        base_urls = {
+            server: stack.enter_context(running_server(SERVER_APPS[server](dataset, config)))
+            for server in sorted(servers)
+        }
+        for server, base_url in base_urls.items():
+            typer.echo(f"Serving {server} at {base_url}")
         paths = take_screenshots(captures, base_urls, output_dir)
     written = [(path, optimise_png(path)) for path in paths]
     oversized = [(path, size) for path, size in written if size > MAX_IMAGE_BYTES]
     if oversized:
-        _report(written)
+        _report([item for item in written if item not in oversized])
+        for path, _ in oversized:
+            path.unlink()
         names = ", ".join(f"{path.name} ({size / 1024:.0f} KB)" for path, size in oversized)
-        raise BrowserError(
-            f"Image(s) over the {MAX_IMAGE_BYTES // 1024} KB limit: {names}. "
+        raise ImageTooLargeError(
+            f"Image(s) over the {MAX_IMAGE_BYTES // 1024} KB limit, deleted: {names}. "
             "Crop to a selector or use a smaller viewport."
         )
     return written
+
+
+def _api_app(dataset: Path, config: Path) -> ASGIApp:
+    typer.echo(f"Training the fixture Linear tagger on {dataset}...")
+    return create_app({"linear": _fixture_tagger(dataset, config)})
+
+
+SERVER_APPS: Final[Mapping[str, Callable[[Path, Path], ASGIApp]]] = {"api": _api_app}
+"""How to build each server of ``captures.SERVERS`` from the fixture dataset and config."""
 
 
 def _fixture_tagger(dataset: Path, config_path: Path) -> Tagger:

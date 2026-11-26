@@ -1,4 +1,4 @@
-"""Seam: the helper that runs the API on a free local port for `docs-screenshots`, no browser."""
+"""Seam 5: the helper that runs the API on a free local port for `docs-screenshots`, no browser."""
 
 import socket
 import urllib.error

@@ -14,9 +14,8 @@ from so_tagger.taggers import Tagger, load_tagger, train_tagger
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 FIXTURE_DATASET = FIXTURES / "stackoverflow_posts_fixture.csv"
 
-# Same shape as the project config.toml, scaled down to the fixture dataset. The Transformer
-# tagger fine-tunes a tiny checkpoint built by the `tiny_checkpoint` fixture, so that it trains
-# in seconds on CPU without any download.
+# The Transformer tagger fine-tunes a tiny checkpoint built by the `tiny_checkpoint` fixture, so
+# that it trains in seconds on CPU without any download.
 FIXTURE_CONFIG = FIXTURES / "config.toml"
 
 FIXTURE_SUPPORTED_TAGS = ("css", "javascript", "python", "sql")

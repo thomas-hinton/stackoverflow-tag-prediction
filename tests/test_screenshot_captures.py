@@ -1,4 +1,4 @@
-"""Seam: the capture list of the `docs-screenshots` command, parsed and validated from TOML."""
+"""Seam 4: the capture list of the `docs-screenshots` command, parsed and validated from TOML."""
 
 from pathlib import Path
 
@@ -93,16 +93,16 @@ def test_an_absolute_url_needs_no_server(tmp_path: Path) -> None:
     [
         ('url = "/docs"', "'name'"),
         ('name = "x"', "'url'"),
-        ('name = "x"\nurl = "/docs"\nactions = [{ hover = "#a" }]', "Unknown action"),
+        ('name = "x"\nurl = "/docs"\nactions = [{ hover = "#a" }]', "unknown action"),
         ('name = "x"\nurl = "/docs"\nactions = [{ fill = "#a" }]', "'value'"),
         ('name = "x"\nurl = "/docs"\nactions = [{ click = "#a", wait_for = "#b" }]', "one of"),
-        ('name = "x"\nurl = "/docs"\nserver = "nowhere"', "Unknown server"),
+        ('name = "x"\nurl = "/docs"\nserver = "nowhere"', "unknown server"),
         ('name = "x"\nurl = "https://github.com"\nserver = "api"', "absolute URL"),
         ('name = "x"\nurl = "docs"', "absolute URL or a path"),
         ('name = "x"\nurl = "/docs"\nviewport = { width = 0, height = 800 }', "width"),
         ('name = "x"\nurl = "/docs"\nviewport = { width = 1280 }', "'height'"),
         ('name = "../x"\nurl = "/docs"', "name"),
-        ('name = "x"\nurl = "/docs"\ncolour = "red"', "Unknown field"),
+        ('name = "x"\nurl = "/docs"\ncolour = "red"', "unknown field"),
     ],
 )
 def test_an_invalid_capture_is_rejected_with_its_name_and_the_reason(

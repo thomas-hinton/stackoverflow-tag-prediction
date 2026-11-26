@@ -17,7 +17,7 @@ DEFAULT_CAPTURES_PATH = Path("docs/screenshots.toml")
 
 SERVERS: Final = ("api",)
 """Servers a capture can target by path; `docs-screenshots` starts each on a fixture Tagger.
-The demo (#15) joins this list once it exists."""
+The demo (#15) joins this list, and ``cli.SERVER_APPS``, once it exists."""
 
 DEFAULT_SERVER: Final = "api"
 DEFAULT_VIEWPORT_WIDTH: Final = 1280
@@ -125,7 +125,7 @@ def _capture(table: Any, where: str) -> Capture:
     unknown = sorted(set(table) - _FIELDS)
     if unknown:
         raise CaptureError(
-            f"{where}: Unknown field(s) {', '.join(unknown)}; "
+            f"{where}: unknown field(s) {', '.join(unknown)}; "
             f"expected some of: {', '.join(sorted(_FIELDS))}."
         )
 
@@ -139,7 +139,7 @@ def _capture(table: Any, where: str) -> Capture:
         server = table.get("server", DEFAULT_SERVER)
         if server not in SERVERS:
             raise CaptureError(
-                f"{where}: Unknown server {server!r}; expected one of: {', '.join(SERVERS)}."
+                f"{where}: unknown server {server!r}; expected one of: {', '.join(SERVERS)}."
             )
     else:
         raise CaptureError(
@@ -188,7 +188,7 @@ def _action(raw: Any, where: str) -> Action:
     kinds = [key for key in raw if key in _ACTION_KINDS]
     expected = ", ".join(_ACTION_KINDS)
     if not kinds:
-        raise CaptureError(f"{where}: Unknown action {sorted(raw)}; expected one of: {expected}.")
+        raise CaptureError(f"{where}: unknown action {sorted(raw)}; expected one of: {expected}.")
     if len(kinds) > 1:
         raise CaptureError(f"{where}: an action holds exactly one of: {expected}.")
     kind = kinds[0]

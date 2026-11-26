@@ -6,6 +6,10 @@ from pathlib import Path
 from so_tagger.screenshots.captures import Capture
 
 
+class ImageTooLargeError(RuntimeError):
+    """A screenshot is still over the size limit after optimisation."""
+
+
 def optimise_png(path: Path) -> int:
     """Quantise the PNG at ``path`` to a 256-colour palette in place; return its new size.
 
