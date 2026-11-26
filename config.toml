@@ -1,5 +1,4 @@
 # Project configuration, versioned with the code.
-# Later tickets add sections here: quality gate.
 
 # Seeds every random component: the split and the Taggers.
 seed = 42
@@ -46,3 +45,10 @@ max_length_percentile = 99  # truncate Titles at the token length covering this 
 inference_batch_size = 128
 num_threads = 0             # CPU threads for PyTorch; 0 keeps PyTorch's default
 # No score_cutoff here: `train` tunes it on the validation split and saves it with the Tagger.
+
+[quality_gate.min_test_micro_f1]
+# Floor on the test micro-F1, per Tagger kind: `gate` fails, and the training workflow publishes
+# no Release, when a Tagger scores below it. Provisional and deliberately low, so that it only
+# catches a broken Tagger; #13 sets the floors from real scores.
+linear = 0.20
+transformer = 0.20

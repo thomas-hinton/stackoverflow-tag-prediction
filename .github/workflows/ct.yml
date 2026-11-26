@@ -1,0 +1,179 @@
+name: CT
+
+# Continuous training: trains the Linear tagger on a GitHub-hosted runner, checks it against the
+# quality gate and publishes it as a Release, then calls the CD workflow to build its image.
+#
+# A Release created here with the default GITHUB_TOKEN triggers no `release` event, so the CD
+# workflow is called explicitly through `workflow_call`.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, semantic versioning without the v (e.g. 0.2.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Run everything except creating the Release (and building its image)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # create the Release
+  packages: write # push the image, in the called CD workflow
+
+# Two training runs never overlap: a new run waits for the current one to finish.
+concurrency:
+  group: ct
+  cancel-in-progress: false
+
+jobs:
+  train:
+    name: train
+    runs-on: ubuntu-latest
+    # The Linear tagger trains in seconds; #12 raises this for the Transformer tagger.
+    timeout-minutes: 15
+    outputs:
+      release_tag: ${{ steps.version.outputs.tag }}
+      released: ${{ steps.release.outputs.released }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      METRICS: metrics/linear-test.json
+      NOTES: release-notes.md
+      GATE_RESULT: gate-result.txt
+    steps:
+      - name: Validate the inputs
+        id: version
+        env:
+          VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          if ! [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Version '$VERSION' is not MAJOR.MINOR.PATCH without a leading v (e.g. 0.2.0)."
+            exit 1
+          fi
+          if [ "$DRY_RUN" != "true" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Releases are only published from main, not from $GITHUB_REF. Use dry_run to try another branch."
+            exit 1
+          fi
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+
+      - name: Fail if the Release already exists
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" > /dev/null; then
+            echo "::error::Tag $RELEASE_TAG already exists: choose another version."
+            exit 1
+          fi
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            echo "::error::A Release named $RELEASE_TAG already exists (draft?): choose another version."
+            exit 1
+          fi
+
+      # setup-uv publishes no floating major tag (`@v10` does not resolve): pin a full version.
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.4.0
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      # The Linear tagger needs no `transformer` extra.
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # The committed split is the reference both Taggers are compared on: training goes on only
+      # if the committed raw dataset and configuration still regenerate it byte for byte.
+      - name: Check that the split is reproducible
+        run: |
+          uv run so-tagger prepare
+          uv run so-tagger split
+          if ! git diff --exit-code --stat -- data/splits \
+            || [ -n "$(git status --porcelain -- data/splits)" ]; then
+            echo "::error::The regenerated split differs from the committed one in data/splits/: regenerate and commit it, or restore the data and configuration it was made from."
+            exit 1
+          fi
+
+      - name: Train
+        run: uv run so-tagger train --tagger linear
+
+      - name: Evaluate on the test split
+        run: uv run so-tagger evaluate --tagger linear --split test --output "$METRICS"
+
+      # Packaged before the gate so that a rejected Tagger can still be downloaded and inspected.
+      - name: Package
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: uv run so-tagger package --tagger linear --release-tag "$RELEASE_TAG" --metrics "$METRICS"
+
+      - name: Write the Release notes
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: uv run so-tagger release-notes --metrics "$METRICS" --run-url "$RUN_URL" > "$NOTES"
+
+      - name: Quality gate
+        run: |
+          set -o pipefail
+          uv run so-tagger gate --tagger linear --metrics "$METRICS" 2>&1 | tee "$GATE_RESULT"
+
+      - name: Upload the Tagger and its metrics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: linear-tagger-${{ steps.version.outputs.tag || 'invalid-version' }}
+          path: |
+            dist/
+            ${{ env.METRICS }}
+            ${{ env.NOTES }}
+            ${{ env.GATE_RESULT }}
+          if-no-files-found: warn
+
+      - name: Create the Release
+        id: release
+        if: ${{ !inputs.dry_run }}
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          gh release create "$RELEASE_TAG" dist/linear-tagger.tar.gz dist/linear-metrics.json \
+            --target "$GITHUB_SHA" --title "$RELEASE_TAG" --notes-file "$NOTES"
+          echo "released=true" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        if: ${{ always() }}
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          RELEASED: ${{ steps.release.outputs.released }}
+        run: |
+          {
+            echo "## Training ${RELEASE_TAG:-(invalid version)}"
+            echo
+            if [ -s "$GATE_RESULT" ]; then
+              echo "**$(sed 's/^Error: //' "$GATE_RESULT")**"
+            else
+              echo "**The run stopped before the quality gate**: see the failed step above."
+            fi
+            echo
+            if [ "$RELEASED" = "true" ]; then
+              echo "Release published: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG. The CD workflow builds its image next."
+            elif [ "$DRY_RUN" = "true" ]; then
+              echo "Dry run: no Release was created. The Tagger and its metrics are in the run's artifacts."
+            else
+              echo "No Release was created. The Tagger and its metrics, if they were produced, are in the run's artifacts."
+            fi
+            echo
+            if [ -s "$NOTES" ]; then cat "$NOTES"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  cd:
+    name: cd
+    needs: train
+    if: ${{ needs.train.outputs.released == 'true' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/cd.yml
+    with:
+      release_tag: ${{ needs.train.outputs.release_tag }}

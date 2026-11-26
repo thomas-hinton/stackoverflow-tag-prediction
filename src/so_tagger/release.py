@@ -16,8 +16,10 @@ import json
 import re
 import shutil
 import tarfile
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import Any
 
 from so_tagger.taggers.base import METADATA_FILE, TaggerMetadata
 
@@ -84,6 +86,76 @@ def package_tagger(
         metrics_asset = output_dir / metrics_asset_name(metadata.kind)
         shutil.copyfile(metrics, metrics_asset)
     return ReleaseAssets(archive=archive, metrics=metrics_asset)
+
+
+_NOTES_METRICS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("micro-F1", ("micro_f1",)),
+    ("micro-precision", ("micro_precision",)),
+    ("micro-recall", ("micro_recall",)),
+    ("macro-F1", ("macro_f1",)),
+    ("P@1", ("precision_at_k", "1")),
+    ("P@3", ("precision_at_k", "3")),
+    ("P@5", ("precision_at_k", "5")),
+    ("R@1", ("recall_at_k", "1")),
+    ("R@3", ("recall_at_k", "3")),
+    ("R@5", ("recall_at_k", "5")),
+)
+"""The rows of the metrics table in the Release notes: label and path inside ``metrics``."""
+
+
+def release_notes(report: Mapping[str, Any], run_url: str | None = None) -> str:
+    """The Markdown notes of a Release, generated from a Tagger's metrics file.
+
+    They hold the metrics table, the Score cut-off, the Supported tag frequency cut-off, the
+    dataset sizes, the commit the Tagger was evaluated on and, when given, the link to the
+    workflow run that trained it.
+    """
+    try:
+        kind = report["tagger"]
+        split = report["split"]
+        metrics = report["metrics"]
+        rows = [f"| {label} | {_dig(metrics, path):.3f} |" for label, path in _NOTES_METRICS]
+        rows.append(
+            f"| Suggestions per Question | {metrics['mean_suggestions_per_question']:.2f} |"
+        )
+        sizes = report["split_sizes"]
+        details = [
+            f"- **Score cut-off**: {report['score_cutoff']:.2f} (validation micro-F1 "
+            f"{report['validation_micro_f1']:.3f})",
+            f"- **Supported tag frequency cut-off**: {report['frequency_cutoff']} Questions "
+            f"({report['n_supported_tags']} Supported tags)",
+            "- **Dataset sizes**: "
+            + ", ".join(f"{sizes[name]} {name}" for name in ("train", "validation", "test"))
+            + " Questions",
+            f"- **Commit**: {report.get('git_commit') or 'unknown'}",
+        ]
+    except (KeyError, TypeError, ValueError) as error:
+        raise ReleaseError(
+            f"The metrics file lacks what the Release notes need: {error}."
+        ) from error
+    if run_url:
+        details.append(f"- **Workflow run**: {run_url}")
+    return "\n".join(
+        [
+            f"## {kind.capitalize()} tagger",
+            "",
+            f"Measured on the {split} split.",
+            "",
+            "| Metric | Value |",
+            "| --- | --- |",
+            *rows,
+            "",
+            *details,
+            "",
+        ]
+    )
+
+
+def _dig(values: Mapping[str, Any], path: tuple[str, ...]) -> float:
+    value: Any = values
+    for key in path:
+        value = value[key]
+    return float(value)
 
 
 def _check_metrics(path: Path, kind: str) -> None:

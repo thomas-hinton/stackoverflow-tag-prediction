@@ -29,7 +29,8 @@ from so_tagger.evaluation import (
     metrics_report,
     summary,
 )
-from so_tagger.release import ReleaseError, package_tagger
+from so_tagger.quality_gate import QualityGateError, check_quality_gate, read_metrics_file
+from so_tagger.release import ReleaseError, package_tagger, release_notes
 from so_tagger.split import SPLIT_NAMES, SplitError, split_questions, write_split
 from so_tagger.taggers import TAGGER_KINDS, TaggerError, load_tagger, train_tagger
 
@@ -91,6 +92,7 @@ def _user_errors() -> Iterator[None]:
         ConfigError,
         DatasetError,
         EvaluationError,
+        QualityGateError,
         ReleaseError,
         SplitError,
         TaggerError,
@@ -279,6 +281,40 @@ def evaluate(
 
 
 @app.command()
+def gate(
+    tagger: TaggerOption = "linear",
+    metrics: Annotated[
+        Path | None,
+        typer.Option(
+            help="Metrics file written by `evaluate` on the test split. "
+            "Defaults to metrics/<tagger>-test.json.",
+            dir_okay=False,
+        ),
+    ] = None,
+    config: ConfigOption = DEFAULT_CONFIG_PATH,
+) -> None:
+    """Fail unless the Tagger's test micro-F1 reaches its quality-gate floor.
+
+    The floor of each Tagger kind is in `[quality_gate.min_test_micro_f1]` of the
+    configuration. Exits with code 1, showing the value, the floor and the difference, when the
+    test micro-F1 is below the floor.
+    """
+    with _user_errors():
+        floors = load_config(config).quality_gate.min_test_micro_f1
+        report = read_metrics_file(metrics or DEFAULT_METRICS_DIR / f"{tagger}-test.json")
+        if report.get("tagger") != tagger:
+            raise QualityGateError(
+                f"The metrics file measures the {report.get('tagger')!r} Tagger, "
+                f"not the '{tagger}' one."
+            )
+        result = check_quality_gate(report, floors)
+    if not result.passed:
+        typer.echo(f"Error: {result.message()}", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(result.message())
+
+
+@app.command()
 def package(
     release_tag: Annotated[
         str,
@@ -317,6 +353,26 @@ def package(
     typer.echo(f"Packaged the {tagger} Tagger as version {release_tag}: {assets.archive}")
     if assets.metrics is not None:
         typer.echo(f"Metrics file copied to {assets.metrics}")
+
+
+@app.command("release-notes")
+def release_notes_command(
+    metrics: Annotated[
+        Path,
+        typer.Option(help="Metrics file written by `evaluate`.", dir_okay=False),
+    ],
+    run_url: Annotated[
+        str | None, typer.Option(help="Link to the workflow run that trained the Tagger.")
+    ] = None,
+) -> None:
+    """Print the Markdown notes of a Release, generated from a Tagger's metrics file.
+
+    They hold the metrics table, the Score cut-off, the frequency cut-off, the dataset sizes,
+    the commit and, with --run-url, a link to the workflow run.
+    """
+    with _user_errors():
+        notes = release_notes(read_metrics_file(metrics), run_url)
+    typer.echo(notes, nl=False)
 
 
 @app.command()

@@ -62,6 +62,10 @@ _Avoid_: Top-k, prediction set
 The JSON record `evaluate` writes for one Tagger on one split: its scores plus what is needed to trace the run. Its schema is in `docs/metrics.md`.
 _Avoid_: Report, results, scores file
 
+**Quality gate**:
+The check a Tagger must pass before it is released: its test micro-F1 must reach the floor set for its kind in `config.toml`.
+_Avoid_: Threshold (alone), acceptance test
+
 ### Delivery
 
 **Release**:

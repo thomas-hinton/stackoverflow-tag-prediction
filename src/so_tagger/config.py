@@ -87,12 +87,21 @@ class TransformerTaggerConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class QualityGateConfig:
+    """The floors a Tagger must reach before it is released."""
+
+    min_test_micro_f1: dict[str, float]
+    """Minimum test micro-F1, per Tagger kind."""
+
+
+@dataclass(frozen=True, slots=True)
 class ProjectConfig:
     seed: int
     data: DataConfig
     split: SplitConfig
     linear_tagger: LinearTaggerConfig
     transformer_tagger: TransformerTaggerConfig
+    quality_gate: QualityGateConfig
 
 
 def load_config(path: Path = DEFAULT_CONFIG_PATH) -> ProjectConfig:
@@ -111,6 +120,7 @@ def load_config(path: Path = DEFAULT_CONFIG_PATH) -> ProjectConfig:
         ),
         linear_tagger=_linear_tagger(_section(raw, "linear_tagger")),
         transformer_tagger=_transformer_tagger(_section(raw, "transformer_tagger")),
+        quality_gate=_quality_gate(_section(raw, "quality_gate")),
     )
 
 
@@ -148,6 +158,20 @@ def _transformer_tagger(section: dict[str, Any]) -> TransformerTaggerConfig:
         inference_batch_size=_int(section, "inference_batch_size", minimum=1),
         num_threads=_int(section, "num_threads", minimum=0),
     )
+
+
+def _quality_gate(section: dict[str, Any]) -> QualityGateConfig:
+    floors = section.get("min_test_micro_f1")
+    if not isinstance(floors, dict) or not floors:
+        raise ConfigError(
+            "Missing [quality_gate.min_test_micro_f1] section in the configuration: "
+            "one floor per Tagger kind, e.g. linear = 0.20."
+        )
+    min_test_micro_f1 = {kind: _float(floors, kind) for kind in floors}
+    for kind, floor in min_test_micro_f1.items():
+        if not 0 <= floor <= 1:
+            raise ConfigError(f"The '{kind}' quality-gate floor must be in [0, 1], got {floor}.")
+    return QualityGateConfig(min_test_micro_f1=min_test_micro_f1)
 
 
 def _ngram_range(section: dict[str, Any], key: str) -> tuple[int, int]:

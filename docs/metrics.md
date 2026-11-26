@@ -4,6 +4,9 @@ How a Tagger's Score cut-off is chosen, and the schema of the metrics file that 
 writes. The quality gate, the Release workflow and the report rely on this schema: change it
 only by bumping `schema_version`.
 
+The quality gate (`so-tagger gate`) reads `metrics.micro_f1` of a test-split metrics file, and
+the Release notes (`so-tagger release-notes`) are generated from the same file.
+
 Both steps go through the Tagger contract only (batch Scores, Supported tags, Score cut-off and
 the shared Suggestion policy), in `src/so_tagger/evaluation.py`. Every Tagger kind is tuned and
 measured the same way.

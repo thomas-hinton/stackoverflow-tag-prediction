@@ -53,3 +53,37 @@ def test_invalid_transformer_tagger_settings_are_rejected(
 
     with pytest.raises(ConfigError, match=message):
         load_config(path)
+
+
+def test_project_config_holds_a_quality_gate_floor_per_tagger_kind() -> None:
+    floors = load_config(CONFIG_PATH).quality_gate.min_test_micro_f1
+
+    assert set(floors) == {"linear", "transformer"}
+    assert all(0 < floor < 1 for floor in floors.values())
+
+
+@pytest.mark.parametrize(
+    ("replacement", "message"),
+    [
+        ("linear = 1.5", "'linear' quality-gate floor must be in \\[0, 1\\]"),
+        ('linear = "high"', "'linear' must be a number"),
+    ],
+)
+def test_invalid_quality_gate_floors_are_rejected(
+    tmp_path: Path, replacement: str, message: str
+) -> None:
+    text = CONFIG_PATH.read_text(encoding="utf-8")
+    path = tmp_path / "config.toml"
+    path.write_text(text.replace("linear = 0.20", replacement), encoding="utf-8")
+
+    with pytest.raises(ConfigError, match=message):
+        load_config(path)
+
+
+def test_a_configuration_without_quality_gate_floors_is_rejected(tmp_path: Path) -> None:
+    text = CONFIG_PATH.read_text(encoding="utf-8")
+    path = tmp_path / "config.toml"
+    path.write_text(text.split("[quality_gate.min_test_micro_f1]")[0], encoding="utf-8")
+
+    with pytest.raises(ConfigError, match="quality_gate"):
+        load_config(path)
