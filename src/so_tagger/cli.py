@@ -4,6 +4,7 @@ import json
 import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import replace
 from pathlib import Path
 from typing import Annotated
 
@@ -202,6 +203,15 @@ def train(
         typer.Option(help="Where to save the Tagger directory. Defaults to artifacts/<tagger>."),
     ] = None,
     config: ConfigOption = DEFAULT_CONFIG_PATH,
+    torch_threads: Annotated[
+        int,
+        typer.Option(
+            envvar="SO_TAGGER_TORCH_THREADS",
+            min=0,
+            help="CPU threads PyTorch uses to train the Transformer tagger; overrides "
+            "`num_threads` of the configuration. 0 keeps the configured value.",
+        ),
+    ] = 0,
 ) -> None:
     """Train a Tagger on the training split and save it as a Tagger directory.
 
@@ -214,6 +224,11 @@ def train(
     directory = output_dir or DEFAULT_TAGGERS_DIR / tagger
     with _user_errors():
         project = load_config(config)
+        if torch_threads > 0:
+            project = replace(
+                project,
+                transformer_tagger=replace(project.transformer_tagger, num_threads=torch_threads),
+            )
         train_set = read_questions(splits_dir / "train.jsonl")
         validation_set = read_questions(splits_dir / "validation.jsonl")
         trained = train_tagger(tagger, train_set, validation_set, project)

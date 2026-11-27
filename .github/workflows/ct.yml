@@ -178,10 +178,11 @@ jobs:
           path: ~/.cache/huggingface
           key: huggingface-${{ runner.os }}-${{ steps.checkpoint.outputs.name }}
 
-      # PyTorch defaults to the physical cores only; use every CPU the runner offers.
+      # PyTorch defaults to the physical cores only, even with OMP_NUM_THREADS set: `train`
+      # calls torch.set_num_threads with every CPU the runner offers.
       - name: Use every CPU for PyTorch
         if: ${{ matrix.tagger == 'transformer' }}
-        run: echo "OMP_NUM_THREADS=$(nproc)" >> "$GITHUB_ENV"
+        run: echo "SO_TAGGER_TORCH_THREADS=$(nproc)" >> "$GITHUB_ENV"
 
       # The Transformer tagger logs its progress every 50 steps and at the end of every epoch.
       - name: Train

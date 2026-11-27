@@ -367,7 +367,8 @@ passed their gate, and the image is built only from a published Release.*
 
 The **train-transformer** job fine-tunes DistilBERT on CPU, so it is long. It has a 330-minute
 timeout, within GitHub's 6-hour job limit; it caches the `uv` environment and the Hugging Face
-checkpoint between runs, gives PyTorch every CPU of the runner (`OMP_NUM_THREADS=$(nproc)`), and
+checkpoint between runs, gives PyTorch every CPU of the runner (`SO_TAGGER_TORCH_THREADS=$(nproc)`, the
+environment variable of `train --torch-threads`), and
 logs its progress every 50 steps and after every epoch, so the run can be followed live with
 `gh run watch` or in the job log.
 
