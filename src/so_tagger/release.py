@@ -138,8 +138,9 @@ def release_notes(reports: Sequence[Mapping[str, Any]], run_url: str | None = No
         ]
         shared = {
             name: _shared_value(reports, name)
-            for name in ("split", "frequency_cutoff", "n_supported_tags", "git_commit")
+            for name in ("split", "frequency_cutoff", "n_supported_tags")
         }
+        commit = _shared_value(reports, "git_commit", optional=True)
         sizes = _shared_value(reports, "split_sizes")
         details = [
             f"- **Supported tag frequency cut-off**: {shared['frequency_cutoff']} Questions "
@@ -147,7 +148,7 @@ def release_notes(reports: Sequence[Mapping[str, Any]], run_url: str | None = No
             "- **Dataset sizes**: "
             + ", ".join(f"{sizes[name]} {name}" for name in ("train", "validation", "test"))
             + " Questions",
-            f"- **Commit**: {shared['git_commit'] or 'unknown'}",
+            f"- **Commit**: {commit or 'unknown'}",
         ]
     except ReleaseError:
         raise
@@ -159,10 +160,9 @@ def release_notes(reports: Sequence[Mapping[str, Any]], run_url: str | None = No
         raise ReleaseError(f"Each Tagger kind needs exactly one metrics file, got {kinds}.")
     if run_url:
         details.append(f"- **Workflow run**: {run_url}")
-    names = [f"{kind.capitalize()} tagger" for kind in kinds]
-    title = (
-        names[0] if len(names) == 1 else " and ".join(k.capitalize() for k in kinds) + " taggers"
-    )
+    kind_names = [kind.capitalize() for kind in kinds]
+    names = [f"{name} tagger" for name in kind_names]
+    title = names[0] if len(names) == 1 else " and ".join(kind_names) + " taggers"
     return "\n".join(
         [
             f"## {title}",
@@ -183,10 +183,15 @@ def _row(label: str, cells: Sequence[str]) -> str:
     return "| " + " | ".join([label, *cells]) + " |"
 
 
-def _shared_value(reports: Sequence[Mapping[str, Any]], name: str) -> Any:
-    """The value of ``name`` in every metrics file, which must be the same in all of them."""
+def _shared_value(
+    reports: Sequence[Mapping[str, Any]], name: str, *, optional: bool = False
+) -> Any:
+    """The value of ``name`` in every metrics file, which must be the same in all of them.
+
+    A missing value raises ``KeyError``, unless ``optional``: it is then ``None`` everywhere.
+    """
     values = [report.get(name) for report in reports]
-    if name != "git_commit" and values[0] is None:
+    if not optional and values[0] is None:
         raise KeyError(name)
     if any(value != values[0] for value in values[1:]):
         raise ReleaseError(

@@ -140,6 +140,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # An empty gate result from the start keeps the artifact's layout (dist/, metrics/, gate/)
+      # stable even when the job stops early; the gate fills it in.
+      - name: Create the gate result
+        run: mkdir -p "$(dirname "$GATE_RESULT")" && touch "$GATE_RESULT"
+
       # The two Taggers install different dependencies: they keep separate uv caches.
       - name: Install uv
         uses: astral-sh/setup-uv@v10.4.0
@@ -163,10 +168,12 @@ jobs:
           checkpoint=$(uv run python -c "from so_tagger.config import load_config; print(load_config().transformer_tagger.checkpoint)")
           echo "name=$checkpoint" >> "$GITHUB_OUTPUT"
 
-      # The pretrained checkpoint is downloaded from the Hugging Face Hub once, then reused.
-      - name: Cache the Hugging Face checkpoint
+      # The pretrained checkpoint is downloaded from the Hugging Face Hub once, then reused. It is
+      # saved even when the job fails later (e.g. at the gate), so the next run need not download it.
+      - name: Restore the Hugging Face checkpoint
+        id: hf-cache
         if: ${{ matrix.tagger == 'transformer' }}
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: ~/.cache/huggingface
           key: huggingface-${{ runner.os }}-${{ steps.checkpoint.outputs.name }}
@@ -180,6 +187,14 @@ jobs:
       - name: Train
         run: uv run so-tagger train --tagger "$TAGGER"
 
+      - name: Save the Hugging Face checkpoint
+        if: ${{ always() && matrix.tagger == 'transformer' && steps.hf-cache.outputs.cache-hit != 'true' }}
+        continue-on-error: true # nothing to save when the job failed before the download
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/huggingface
+          key: huggingface-${{ runner.os }}-${{ steps.checkpoint.outputs.name }}
+
       - name: Evaluate on the test split
         run: uv run so-tagger evaluate --tagger "$TAGGER" --split test --output "$METRICS"
 
@@ -190,11 +205,11 @@ jobs:
       - name: Quality gate
         run: |
           set -o pipefail
-          mkdir -p "$(dirname "$GATE_RESULT")"
           uv run so-tagger gate --tagger "$TAGGER" --metrics "$METRICS" 2>&1 | tee "$GATE_RESULT"
 
+      # Also after a timeout, which GitHub treats as a cancellation.
       - name: Upload the Tagger and its metrics
-        if: ${{ !cancelled() }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.tagger }}-tagger-${{ needs.prepare.outputs.release_tag }}
