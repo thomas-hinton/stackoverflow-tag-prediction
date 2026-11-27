@@ -166,13 +166,14 @@ def linear_metrics(linear_tagger: Tagger, tmp_path: Path) -> Path:
 def test_release_notes_hold_the_metrics_cutoffs_sizes_commit_and_run(linear_metrics: Path) -> None:
     report = json.loads(linear_metrics.read_text(encoding="utf-8"))
 
-    notes = release_notes(report, run_url="https://github.com/o/r/actions/runs/42")
+    notes = release_notes([report], run_url="https://github.com/o/r/actions/runs/42")
 
     assert notes.startswith("## Linear tagger\n")
+    assert "| Metric | Linear tagger |" in notes
     assert f"| micro-F1 | {report['metrics']['micro_f1']:.3f} |" in notes
     assert f"| macro-F1 | {report['metrics']['macro_f1']:.3f} |" in notes
     assert f"| P@1 | {report['metrics']['precision_at_k']['1']:.3f} |" in notes
-    assert f"**Score cut-off**: {report['score_cutoff']:.2f}" in notes
+    assert f"| Score cut-off | {report['score_cutoff']:.2f} |" in notes
     assert f"**Supported tag frequency cut-off**: {report['frequency_cutoff']} Questions" in notes
     sizes = report["split_sizes"]
     assert f"{sizes['train']} train, {sizes['validation']} validation, 3 test" in notes
@@ -190,4 +191,79 @@ def test_release_notes_command_prints_the_notes(linear_metrics: Path) -> None:
 
 def test_release_notes_reject_an_incomplete_metrics_file() -> None:
     with pytest.raises(ReleaseError, match="lacks what the Release notes need"):
-        release_notes({"schema_version": 1, "tagger": "linear", "split": "test"})
+        release_notes([{"schema_version": 1, "tagger": "linear", "split": "test"}])
+
+
+def a_report(tagger: str, micro_f1: float, **changes: object) -> dict[str, object]:
+    """A complete metrics file with literal values, as `evaluate` writes it on the test split."""
+    report: dict[str, object] = {
+        "schema_version": 1,
+        "tagger": tagger,
+        "split": "test",
+        "metrics": {
+            "micro_f1": micro_f1,
+            "micro_precision": 0.5,
+            "micro_recall": 0.25,
+            "macro_f1": 0.125,
+            "precision_at_k": {"1": 0.75, "3": 0.5, "5": 0.375},
+            "recall_at_k": {"1": 0.25, "3": 0.5, "5": 0.625},
+            "mean_suggestions_per_question": 1.5,
+        },
+        "score_cutoff": 0.3,
+        "validation_micro_f1": 0.6,
+        "frequency_cutoff": 20,
+        "n_supported_tags": 86,
+        "split_sizes": {"train": 2870, "validation": 615, "test": 616},
+        "training_seconds": 12.4,
+        "git_commit": "abc123",
+    }
+    report.update(changes)
+    return report
+
+
+def test_release_notes_compare_both_taggers_side_by_side() -> None:
+    linear = a_report("linear", 0.4567, score_cutoff=0.27, training_seconds=12.4)
+    transformer = a_report("transformer", 0.5321, score_cutoff=0.18, training_seconds=3725.0)
+
+    notes = release_notes([linear, transformer], run_url="https://github.com/o/r/actions/runs/7")
+
+    assert "| Metric | Linear tagger | Transformer tagger |" in notes
+    assert "| micro-F1 | 0.457 | 0.532 |" in notes
+    assert "| P@1 | 0.750 | 0.750 |" in notes
+    assert "| Score cut-off | 0.27 | 0.18 |" in notes
+    assert "| Training time | 12 s | 1 h 02 min 05 s |" in notes
+    assert "**Supported tag frequency cut-off**: 20 Questions (86 Supported tags)" in notes
+    assert "2870 train, 615 validation, 616 test Questions" in notes
+    assert "**Commit**: abc123" in notes
+    assert "**Workflow run**: https://github.com/o/r/actions/runs/7" in notes
+
+
+def test_release_notes_command_compares_every_metrics_file_given(tmp_path: Path) -> None:
+    paths = []
+    for report in (a_report("linear", 0.4567), a_report("transformer", 0.5321)):
+        path = tmp_path / f"{report['tagger']}-test.json"
+        path.write_text(json.dumps(report), encoding="utf-8")
+        paths += ["--metrics", str(path)]
+
+    result = runner.invoke(app, ["release-notes", *paths])
+
+    assert result.exit_code == 0, result.output
+    assert result.output.startswith("## Linear and Transformer taggers\n")
+    assert "| micro-F1 | 0.457 | 0.532 |" in result.output
+
+
+@pytest.mark.parametrize(
+    ("other", "changes", "message"),
+    [
+        ("linear", {}, "exactly one metrics file"),
+        ("transformer", {"split_sizes": {"train": 1, "validation": 1, "test": 1}}, "'split_sizes'"),
+        ("transformer", {"git_commit": "def456"}, "differ in 'git_commit'"),
+        ("transformer", {"frequency_cutoff": 10}, "differ in 'frequency_cutoff'"),
+    ],
+    ids=["same-kind", "other-dataset", "other-commit", "other-cutoff"],
+)
+def test_release_notes_refuse_taggers_that_cannot_be_compared(
+    other: str, changes: dict[str, object], message: str
+) -> None:
+    with pytest.raises(ReleaseError, match=message):
+        release_notes([a_report("linear", 0.4), a_report(other, 0.5, **changes)])

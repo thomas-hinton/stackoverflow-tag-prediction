@@ -16,7 +16,7 @@ import json
 import re
 import shutil
 import tarfile
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
@@ -103,52 +103,110 @@ _NOTES_METRICS: tuple[tuple[str, tuple[str, ...]], ...] = (
 """The rows of the metrics table in the Release notes: label and path inside ``metrics``."""
 
 
-def release_notes(report: Mapping[str, Any], run_url: str | None = None) -> str:
-    """The Markdown notes of a Release, generated from a Tagger's metrics file.
+def release_notes(reports: Sequence[Mapping[str, Any]], run_url: str | None = None) -> str:
+    """The Markdown notes of a Release, generated from the metrics files of its Taggers.
 
-    They hold the metrics table, the Score cut-off, the Supported tag frequency cut-off, the
-    dataset sizes, the commit the Tagger was evaluated on and, when given, the link to the
-    workflow run that trained it.
+    A table compares the Taggers side by side: one column per Tagger, in the order given, with
+    their test metrics, Score cut-offs and training times. Below it come what the Taggers
+    share: the Supported tag frequency cut-off, the dataset sizes, the commit they were
+    evaluated on and, when given, the link to the workflow run that trained them. Raises
+    ``ReleaseError`` when a metrics file lacks a value, when two files measure the same Tagger
+    kind, or when the files were not measured on the same split, dataset and commit.
     """
+    if not reports:
+        raise ReleaseError("The Release notes need at least one metrics file.")
     try:
-        kind = report["tagger"]
-        split = report["split"]
-        metrics = report["metrics"]
-        rows = [f"| {label} | {_dig(metrics, path):.3f} |" for label, path in _NOTES_METRICS]
-        rows.append(
-            f"| Suggestions per Question | {metrics['mean_suggestions_per_question']:.2f} |"
-        )
-        sizes = report["split_sizes"]
+        kinds = [str(report["tagger"]) for report in reports]
+        rows = [
+            _row(label, [f"{_dig(report['metrics'], path):.3f}" for report in reports])
+            for label, path in _NOTES_METRICS
+        ]
+        rows += [
+            _row(
+                "Suggestions per Question",
+                [f"{report['metrics']['mean_suggestions_per_question']:.2f}" for report in reports],
+            ),
+            _row("Score cut-off", [f"{report['score_cutoff']:.2f}" for report in reports]),
+            _row(
+                "Validation micro-F1",
+                [f"{report['validation_micro_f1']:.3f}" for report in reports],
+            ),
+            _row(
+                "Training time",
+                [_duration(report.get("training_seconds")) for report in reports],
+            ),
+        ]
+        shared = {
+            name: _shared_value(reports, name)
+            for name in ("split", "frequency_cutoff", "n_supported_tags", "git_commit")
+        }
+        sizes = _shared_value(reports, "split_sizes")
         details = [
-            f"- **Score cut-off**: {report['score_cutoff']:.2f} (validation micro-F1 "
-            f"{report['validation_micro_f1']:.3f})",
-            f"- **Supported tag frequency cut-off**: {report['frequency_cutoff']} Questions "
-            f"({report['n_supported_tags']} Supported tags)",
+            f"- **Supported tag frequency cut-off**: {shared['frequency_cutoff']} Questions "
+            f"({shared['n_supported_tags']} Supported tags)",
             "- **Dataset sizes**: "
             + ", ".join(f"{sizes[name]} {name}" for name in ("train", "validation", "test"))
             + " Questions",
-            f"- **Commit**: {report.get('git_commit') or 'unknown'}",
+            f"- **Commit**: {shared['git_commit'] or 'unknown'}",
         ]
+    except ReleaseError:
+        raise
     except (KeyError, TypeError, ValueError) as error:
         raise ReleaseError(
             f"The metrics file lacks what the Release notes need: {error}."
         ) from error
+    if len(set(kinds)) != len(kinds):
+        raise ReleaseError(f"Each Tagger kind needs exactly one metrics file, got {kinds}.")
     if run_url:
         details.append(f"- **Workflow run**: {run_url}")
+    names = [f"{kind.capitalize()} tagger" for kind in kinds]
+    title = (
+        names[0] if len(names) == 1 else " and ".join(k.capitalize() for k in kinds) + " taggers"
+    )
     return "\n".join(
         [
-            f"## {kind.capitalize()} tagger",
+            f"## {title}",
             "",
-            f"Measured on the {split} split.",
+            f"Measured on the {shared['split']} split.",
             "",
-            "| Metric | Value |",
-            "| --- | --- |",
+            _row("Metric", names),
+            _row("---", ["---"] * len(names)),
             *rows,
             "",
             *details,
             "",
         ]
     )
+
+
+def _row(label: str, cells: Sequence[str]) -> str:
+    return "| " + " | ".join([label, *cells]) + " |"
+
+
+def _shared_value(reports: Sequence[Mapping[str, Any]], name: str) -> Any:
+    """The value of ``name`` in every metrics file, which must be the same in all of them."""
+    values = [report.get(name) for report in reports]
+    if name != "git_commit" and values[0] is None:
+        raise KeyError(name)
+    if any(value != values[0] for value in values[1:]):
+        raise ReleaseError(
+            f"The Taggers cannot be compared: their metrics files differ in '{name}' "
+            f"({', '.join(map(str, values))}). Evaluate them on the same split and commit."
+        )
+    return values[0]
+
+
+def _duration(seconds: float | None) -> str:
+    """A training time such as ``12 s``, ``2 min 05 s`` or ``1 h 02 min 05 s``."""
+    if seconds is None:
+        return "unknown"
+    minutes, secs = divmod(round(seconds), 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        return f"{hours} h {minutes:02d} min {secs:02d} s"
+    if minutes:
+        return f"{minutes} min {secs:02d} s"
+    return f"{secs} s"
 
 
 def _dig(values: Mapping[str, Any], path: tuple[str, ...]) -> float:

@@ -358,20 +358,25 @@ def package(
 @app.command("release-notes")
 def release_notes_command(
     metrics: Annotated[
-        Path,
-        typer.Option(help="Metrics file written by `evaluate`.", dir_okay=False),
+        list[Path],
+        typer.Option(
+            help="Metrics file written by `evaluate`, one per Tagger; repeat the option to "
+            "compare several Taggers side by side.",
+            dir_okay=False,
+        ),
     ],
     run_url: Annotated[
-        str | None, typer.Option(help="Link to the workflow run that trained the Tagger.")
+        str | None, typer.Option(help="Link to the workflow run that trained the Taggers.")
     ] = None,
 ) -> None:
-    """Print the Markdown notes of a Release, generated from a Tagger's metrics file.
+    """Print the Markdown notes of a Release, generated from its Taggers' metrics files.
 
-    They hold the metrics table, the Score cut-off, the frequency cut-off, the dataset sizes,
-    the commit and, with --run-url, a link to the workflow run.
+    They hold a table comparing the Taggers side by side (test metrics, Score cut-offs,
+    training times), the frequency cut-off, the dataset sizes, the commit and, with --run-url,
+    a link to the workflow run. The metrics files must share the split, dataset and commit.
     """
     with _user_errors():
-        notes = release_notes(read_metrics_file(metrics), run_url)
+        notes = release_notes([read_metrics_file(path) for path in metrics], run_url)
     typer.echo(notes, nl=False)
 
 
