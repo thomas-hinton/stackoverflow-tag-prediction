@@ -97,7 +97,7 @@ class SuggestResponse(BaseModel):
             "examples": [
                 {
                     "tagger": "linear",
-                    "version": "v0.1.0",
+                    "version": "v0.3.0",
                     "suggestions": [
                         {"tag": "python", "score": 0.97},
                         {"tag": "json", "score": 0.91},
@@ -147,8 +147,12 @@ class HealthResponse(BaseModel):
                 {
                     "status": "ok",
                     "taggers": {
-                        "linear": {"loaded": True, "version": "v0.1.0", "n_supported_tags": 86},
-                        "transformer": {"loaded": False, "version": None, "n_supported_tags": 0},
+                        "linear": {"loaded": True, "version": "v0.3.0", "n_supported_tags": 86},
+                        "transformer": {
+                            "loaded": True,
+                            "version": "v0.3.0",
+                            "n_supported_tags": 86,
+                        },
                     },
                 }
             ]
@@ -207,7 +211,7 @@ def create_app(taggers: Mapping[str, Tagger]) -> FastAPI:
                 detail=f"The {request.tagger} Tagger is not loaded on this server.",
             )
         suggestions = tagger.suggest(request.title)
-        _log_request(request, len(suggestions), start)
+        _log_request(request, len(suggestions), start, tagger.metadata.version)
         return SuggestResponse(
             tagger=request.tagger,
             version=tagger.metadata.version,
@@ -248,11 +252,17 @@ def _tagger_status(tagger: Tagger | None) -> TaggerStatus:
     )
 
 
-def _log_request(request: SuggestRequest, n_suggestions: int | None, start: float) -> None:
-    """One structured line per request. The Title itself is only logged at debug level."""
+def _log_request(
+    request: SuggestRequest, n_suggestions: int | None, start: float, version: str | None = None
+) -> None:
+    """One structured line per request, with the latency of the Tagger that answered.
+
+    The Title itself is only logged at debug level.
+    """
     fields = {
         "event": "suggest",
         "tagger": request.tagger,
+        "version": version,
         "title_length": len(request.title),
         "n_suggestions": n_suggestions,
         "latency_ms": round((time.perf_counter() - start) * 1000, 2),

@@ -84,24 +84,32 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
+          # The image sets the Hugging Face offline variables: both Taggers load from its files.
           docker run --detach --name smoke --publish 8000:8000 "$SMOKE_IMAGE"
           trap 'docker logs smoke; docker rm --force smoke > /dev/null' EXIT
 
-          for _ in $(seq 30); do
+          for _ in $(seq 60); do
             if curl --silent --fail http://127.0.0.1:8000/health > health.json; then break; fi
             sleep 2
           done
           curl --silent --fail http://127.0.0.1:8000/health > health.json
           cat health.json
-          jq --exit-status --arg tag "$RELEASE_TAG" \
-            '.status == "ok" and .taggers.linear.version == $tag' health.json
+          jq --exit-status --arg tag "$RELEASE_TAG" '
+            .status == "ok"
+            and ([.taggers.linear, .taggers.transformer]
+                 | all(.loaded and .version == $tag and .n_supported_tags > 0))
+          ' health.json
 
-          curl --silent --fail -X POST http://127.0.0.1:8000/suggest \
-            -H 'Content-Type: application/json' \
-            -d '{"title": "How do I parse JSON in Python?"}' > suggest.json
-          cat suggest.json
-          jq --exit-status --arg tag "$RELEASE_TAG" \
-            '(.suggestions | length) >= 1 and .version == $tag' suggest.json
+          for tagger in linear transformer; do
+            curl --silent --fail -X POST http://127.0.0.1:8000/suggest \
+              -H 'Content-Type: application/json' \
+              -d "{\"title\": \"How do I parse JSON in Python?\", \"tagger\": \"$tagger\"}" \
+              > "suggest-$tagger.json"
+            cat "suggest-$tagger.json"
+            jq --exit-status --arg tag "$RELEASE_TAG" --arg tagger "$tagger" \
+              '(.suggestions | length) >= 1 and .version == $tag and .tagger == $tagger' \
+              "suggest-$tagger.json"
+          done
 
           test "$(docker inspect --format '{{.Config.User}}' "$SMOKE_IMAGE")" = "tagger:tagger"
 

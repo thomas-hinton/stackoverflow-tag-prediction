@@ -1,15 +1,24 @@
 # Start the API from the image published on GHCR:
 #   docker compose up
 # Pick another Release than the latest one:
-#   SO_TAGGER_IMAGE_TAG=v0.1.0 docker compose up
+#   SO_TAGGER_IMAGE_TAG=v0.3.0 docker compose up
 # Build the image locally from a Release instead of pulling it:
-#   RELEASE_TAG=v0.1.0 docker compose -f compose.yaml -f compose.build.yaml up --build
+#   RELEASE_TAG=v0.3.0 docker compose -f compose.yaml -f compose.build.yaml up --build
 services:
   api:
     image: ghcr.io/thomas-hinton/stackoverflow-tag-prediction:${SO_TAGGER_IMAGE_TAG:-latest}
     ports:
       - "${SO_TAGGER_PORT:-8000}:8000"
     restart: unless-stopped
+    environment:
+      # CPU threads PyTorch uses for the Transformer tagger; 0 keeps PyTorch's default.
+      SO_TAGGER_TORCH_THREADS: ${SO_TAGGER_TORCH_THREADS:-0}
+    deploy:
+      resources:
+        limits:
+          # Both Taggers loaded: about 360 MiB at idle, about 400 MiB under 16 concurrent
+          # clients (README, "Run with Docker"). 1 GiB leaves room for longer Titles.
+          memory: 1g
     healthcheck:
       test:
         - CMD
@@ -18,5 +27,5 @@ services:
         - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)"
       interval: 30s
       timeout: 5s
-      start_period: 20s
+      start_period: 60s
       retries: 3

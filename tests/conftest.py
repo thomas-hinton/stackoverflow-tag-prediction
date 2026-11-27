@@ -89,17 +89,38 @@ def needs_transformer_extra(kind: str) -> None:
         pytest.importorskip("transformers")
 
 
-@pytest.fixture(scope="session")
-def linear_tagger(tmp_path_factory: pytest.TempPathFactory, fixture_config_toml: str) -> Tagger:
-    """A small Linear tagger trained and tuned on the fixture dataset, shared by the session."""
-    config_path = tmp_path_factory.mktemp("linear-config") / "config.toml"
-    config_path.write_text(fixture_config_toml, encoding="utf-8")
+def train_fixture_tagger(kind: str, config_toml: str, directory: Path) -> Tagger:
+    """A Tagger of ``kind`` trained and tuned on the fixture dataset."""
+    config_path = directory / "config.toml"
+    config_path.write_text(config_toml, encoding="utf-8")
     config = load_config(config_path)
     dataset = prepare_questions(read_raw_questions(FIXTURE_DATASET), config.data.frequency_cutoff)
     dataset_split = split_questions(
         dataset.questions, dataset.supported_tags, config.split, config.seed
     )
-    return train_tagger("linear", dataset_split.train, dataset_split.validation, config)
+    return train_tagger(kind, dataset_split.train, dataset_split.validation, config)
+
+
+@pytest.fixture(scope="session")
+def linear_tagger(tmp_path_factory: pytest.TempPathFactory, fixture_config_toml: str) -> Tagger:
+    """A small Linear tagger trained and tuned on the fixture dataset, shared by the session."""
+    return train_fixture_tagger(
+        "linear", fixture_config_toml, tmp_path_factory.mktemp("linear-config")
+    )
+
+
+@pytest.fixture(scope="session")
+def transformer_tagger(
+    tmp_path_factory: pytest.TempPathFactory, fixture_config_toml: str
+) -> Tagger:
+    """A Transformer tagger fine-tuned from the tiny checkpoint, shared by the session.
+
+    Skips the test without the `transformer` extra.
+    """
+    needs_transformer_extra("transformer")
+    return train_fixture_tagger(
+        "transformer", fixture_config_toml, tmp_path_factory.mktemp("transformer-config")
+    )
 
 
 RELEASE_TAG = "v1.2.3"
@@ -113,12 +134,24 @@ def extract_archive(archive: Path, directory: Path) -> Path:
     return directory
 
 
+def release_fixture_tagger(tagger: Tagger, root: Path) -> Tagger:
+    """``tagger`` packaged for Release ``RELEASE_TAG``, then extracted and loaded back."""
+    tagger.save(root / "trained")
+    assets = package_tagger(root / "trained", RELEASE_TAG, root / "dist")
+    return load_tagger(extract_archive(assets.archive, root / "extracted"))
+
+
 @pytest.fixture(scope="session")
 def released_linear_tagger(
     tmp_path_factory: pytest.TempPathFactory, linear_tagger: Tagger
 ) -> Tagger:
     """The fixture Linear tagger packaged for Release ``RELEASE_TAG``, then extracted and loaded."""
-    root = tmp_path_factory.mktemp("release")
-    linear_tagger.save(root / "trained")
-    assets = package_tagger(root / "trained", RELEASE_TAG, root / "dist")
-    return load_tagger(extract_archive(assets.archive, root / "extracted"))
+    return release_fixture_tagger(linear_tagger, tmp_path_factory.mktemp("release"))
+
+
+@pytest.fixture(scope="session")
+def released_transformer_tagger(
+    tmp_path_factory: pytest.TempPathFactory, transformer_tagger: Tagger
+) -> Tagger:
+    """The fixture Transformer tagger packaged for Release ``RELEASE_TAG``, extracted and loaded."""
+    return release_fixture_tagger(transformer_tagger, tmp_path_factory.mktemp("release"))

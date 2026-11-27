@@ -17,4 +17,10 @@ actions = [
   { wait_for = "#operations-default-suggest_suggest_post .opblock-summary" },
   { click = "#operations-default-suggest_suggest_post .opblock-summary" },
   { wait_for = "#operations-default-suggest_suggest_post .responses-wrapper" },
+  { click = "#operations-default-suggest_suggest_post .opblock-section-request-body [data-name='model']" },
+  { wait_for = "#operations-default-suggest_suggest_post .opblock-section-request-body .model-box" },
+  { click = "#operations-default-suggest_suggest_post .opblock-section-request-body li.json-schema-2020-12-property:has-text('tagger') button.json-schema-2020-12-accordion" },
+  { wait_for = "#operations-default-suggest_suggest_post .opblock-section-request-body .json-schema-2020-12-keyword--enum" },
+  { click = "#operations-default-suggest_suggest_post .opblock-section-request-body .json-schema-2020-12-keyword--enum button.json-schema-2020-12-accordion" },
+  { wait_for = "#operations-default-suggest_suggest_post .opblock-section-request-body .json-schema-2020-12-keyword--enum li:has-text('transformer')" },
 ]

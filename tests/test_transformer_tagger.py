@@ -7,6 +7,7 @@ Tagger kind by the Tagger contract suite.
 import math
 import shutil
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -15,7 +16,7 @@ import pytest
 from so_tagger.config import ProjectConfig, load_config
 from so_tagger.dataset import prepare_questions, read_raw_questions
 from so_tagger.split import DatasetSplit, split_questions
-from so_tagger.taggers import TaggerError, load_tagger, train_tagger
+from so_tagger.taggers import Tagger, TaggerError, load_tagger, train_tagger
 from tests.conftest import FIXTURE_DATASET
 
 pytest.importorskip("torch")
@@ -117,6 +118,28 @@ def test_a_saved_tagger_loads_offline_from_its_directory_alone(
     loaded = load_tagger(tmp_path / "moved")
 
     np.testing.assert_array_equal(loaded.score(TITLES), tagger.score(TITLES))
+
+
+def test_a_loaded_tagger_serves_in_eval_mode_without_gradients(
+    released_transformer_tagger: Tagger,
+) -> None:
+    model = released_transformer_tagger._model  # type: ignore[attr-defined]
+
+    assert not model.training
+    assert not any(parameter.requires_grad for parameter in model.parameters())
+
+
+def test_scoring_from_many_threads_gives_the_sequential_scores(
+    released_transformer_tagger: Tagger,
+) -> None:
+    titles = [*TITLES, "SQL query to join two tables", "JavaScript fetch returns a promise"]
+    expected = [released_transformer_tagger.score([title]) for title in titles]
+
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        scores = list(pool.map(lambda t: released_transformer_tagger.score([t]), titles * 50))
+
+    for got, want in zip(scores, expected * 50, strict=True):
+        np.testing.assert_allclose(got, want, rtol=1e-5, atol=1e-6)
 
 
 def test_scoring_no_title_gives_an_empty_score_matrix(
