@@ -389,16 +389,37 @@ def serve(
             file_okay=False,
         ),
     ] = DEFAULT_TAGGERS_DIR / "linear",
+    transformer_dir: Annotated[
+        Path,
+        typer.Option(
+            envvar="SO_TAGGER_TRANSFORMER_DIR",
+            help="Transformer tagger directory written by `train` (needs the transformer extra).",
+            file_okay=False,
+        ),
+    ] = DEFAULT_TAGGERS_DIR / "transformer",
+    torch_threads: Annotated[
+        int,
+        typer.Option(
+            envvar="SO_TAGGER_TORCH_THREADS",
+            min=0,
+            help="CPU threads PyTorch uses for the Transformer tagger; 0 keeps its default.",
+        ),
+    ] = 0,
 ) -> None:
     """Serve the HTTP API; the interactive documentation is at /docs.
 
-    Taggers are loaded once at startup. A missing Tagger directory leaves that Tagger
-    unloaded: the API still starts, and GET /health answers 503 while the Linear tagger is
-    missing. Only the Linear tagger is served for now. Each Tagger reports the version
+    Both Taggers are loaded once at startup. A missing Tagger directory leaves that Tagger
+    unloaded: the API still starts, requests for it get a 503, and GET /health answers 503
+    while the Linear tagger (the default) is missing. Each Tagger reports the version
     recorded in its metadata: the Release tag set by `package`, or `dev`.
     """
     with _user_errors():
-        taggers = load_taggers({"linear": linear_dir})
+        taggers = load_taggers({"linear": linear_dir, "transformer": transformer_dir})
+    if torch_threads > 0 and "transformer" in taggers:
+        import torch  # installed with the `transformer` extra, which loading it required
+
+        torch.set_num_threads(torch_threads)
+        typer.echo(f"PyTorch uses {torch_threads} CPU threads.")
     uvicorn.run(create_app(taggers), host=host, port=port)
 
 

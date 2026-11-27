@@ -1,7 +1,12 @@
-"""Seam 1: the HTTP API, driven in process with a Linear tagger trained on the fixture dataset."""
+"""Seam 1: the HTTP API, driven in process with Taggers trained on the fixture dataset.
+
+The Transformer tagger is fine-tuned from a tiny local checkpoint; its tests skip themselves
+without the `transformer` extra.
+"""
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, get_args
 
@@ -24,6 +29,18 @@ OFF_TOPIC_TITLE = "Hello, how are you?"
 @pytest.fixture(scope="module")
 def client(released_linear_tagger: Tagger) -> TestClient:
     return TestClient(create_app({"linear": released_linear_tagger}))
+
+
+@pytest.fixture(scope="module")
+def both_taggers(
+    released_linear_tagger: Tagger, released_transformer_tagger: Tagger
+) -> dict[str, Tagger]:
+    return {"linear": released_linear_tagger, "transformer": released_transformer_tagger}
+
+
+@pytest.fixture(scope="module")
+def client_with_both(both_taggers: dict[str, Tagger]) -> TestClient:
+    return TestClient(create_app(both_taggers))
 
 
 @pytest.fixture(scope="module")
@@ -121,6 +138,78 @@ def test_a_known_but_unloaded_tagger_is_unavailable(client: TestClient) -> None:
     body = suggest(client, {"title": TITLE, "tagger": "transformer"}, expected_status=503)
 
     assert body["detail"] == "The transformer Tagger is not loaded on this server."
+
+
+def test_the_transformer_tagger_answers_when_asked(
+    client_with_both: TestClient, transformer_tagger: Tagger
+) -> None:
+    body = suggest(client_with_both, {"title": TITLE, "tagger": "transformer"})
+
+    assert body["tagger"] == "transformer"
+    assert body["version"] == RELEASE_TAG
+    assert_valid_suggestion_list(body)
+    expected = transformer_tagger.suggest(TITLE)
+    assert [s["tag"] for s in body["suggestions"]] == [s.tag for s in expected]
+    assert [s["score"] for s in body["suggestions"]] == pytest.approx([s.score for s in expected])
+
+
+def test_with_both_taggers_loaded_the_default_is_still_linear(
+    client_with_both: TestClient,
+) -> None:
+    assert suggest(client_with_both, {"title": TITLE})["tagger"] == "linear"
+
+
+def test_health_lists_both_loaded_taggers_with_their_versions(
+    client_with_both: TestClient,
+) -> None:
+    response = client_with_both.get("/health")
+
+    assert response.status_code == 200
+    loaded = {
+        "loaded": True,
+        "version": RELEASE_TAG,
+        "n_supported_tags": len(FIXTURE_SUPPORTED_TAGS),
+    }
+    assert response.json() == {
+        "status": "ok",
+        "taggers": {"linear": loaded, "transformer": loaded},
+    }
+
+
+def test_removing_the_transformer_tagger_makes_it_unavailable_again(
+    both_taggers: dict[str, Tagger],
+) -> None:
+    registry = {kind: t for kind, t in both_taggers.items() if kind != "transformer"}
+    client = TestClient(create_app(registry))
+
+    suggest(client, {"title": TITLE, "tagger": "transformer"}, expected_status=503)
+    assert client.get("/health").json()["taggers"]["transformer"]["loaded"] is False
+
+
+def test_concurrent_requests_get_the_same_answers_as_sequential_ones(
+    client_with_both: TestClient,
+) -> None:
+    titles = [TITLE, OFF_TOPIC_TITLE, "Center a div with CSS flexbox", "SQL join two tables"]
+    payloads = [{"title": t, "tagger": k} for t in titles for k in TAGGER_KINDS]
+    expected = [suggest(client_with_both, payload) for payload in payloads]
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        answers = list(pool.map(lambda p: suggest(client_with_both, p), payloads * 8))
+
+    assert answers == expected * 8
+
+
+def test_the_latency_is_logged_per_tagger(
+    client_with_both: TestClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.INFO, logger="so_tagger.api"):
+        for kind in TAGGER_KINDS:
+            suggest(client_with_both, {"title": TITLE, "tagger": kind})
+
+    lines = [json.loads(r.getMessage()) for r in caplog.records if r.name == "so_tagger.api"]
+    assert [line["tagger"] for line in lines] == list(TAGGER_KINDS)
+    assert [line["version"] for line in lines] == [RELEASE_TAG] * len(TAGGER_KINDS)
+    assert all(line["latency_ms"] >= 0 for line in lines)
 
 
 def test_the_known_kinds_of_the_api_are_the_tagger_kinds() -> None:
@@ -254,13 +343,54 @@ def test_serve_loads_the_tagger_directory_from_the_environment(
     assert health["taggers"]["linear"]["version"] == RELEASE_TAG
 
 
+def test_serve_loads_both_taggers_and_sets_the_torch_threads_from_the_environment(
+    released_linear_tagger: Tagger,
+    released_transformer_tagger: Tagger,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import torch
+
+    released_linear_tagger.save(tmp_path / "linear")
+    released_transformer_tagger.save(tmp_path / "transformer")
+    served: dict[str, Any] = {}
+    monkeypatch.setattr("so_tagger.cli.uvicorn.run", lambda app, host, port: served.update(app=app))
+    monkeypatch.setattr(torch, "set_num_threads", lambda n: served.update(threads=n))
+
+    result = CliRunner().invoke(
+        cli_app,
+        ["serve"],
+        env={
+            "SO_TAGGER_LINEAR_DIR": str(tmp_path / "linear"),
+            "SO_TAGGER_TRANSFORMER_DIR": str(tmp_path / "transformer"),
+            "SO_TAGGER_TORCH_THREADS": "3",
+        },
+    )
+
+    assert result.exit_code == 0, result.output
+    assert served["threads"] == 3
+    client = TestClient(served["app"])
+    taggers = client.get("/health").json()["taggers"]
+    assert taggers["linear"]["loaded"] and taggers["transformer"]["loaded"]
+    assert suggest(client, {"title": TITLE, "tagger": "transformer"})["tagger"] == "transformer"
+
+
 def test_serve_starts_without_a_tagger_and_reports_it_unhealthy(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     served: dict[str, Any] = {}
     monkeypatch.setattr("so_tagger.cli.uvicorn.run", lambda app, host, port: served.update(app=app))
 
-    result = CliRunner().invoke(cli_app, ["serve", "--linear-dir", str(tmp_path / "none")])
+    result = CliRunner().invoke(
+        cli_app,
+        [
+            "serve",
+            "--linear-dir",
+            str(tmp_path / "none"),
+            "--transformer-dir",
+            str(tmp_path / "none"),
+        ],
+    )
 
     assert result.exit_code == 0, result.output
     assert "No linear Tagger" in result.output

@@ -9,6 +9,7 @@ Needs the ``transformer`` extra (torch, transformers): ``uv sync --extra transfo
 import copy
 import logging
 import math
+import threading
 import time
 from collections.abc import Sequence
 from dataclasses import asdict, replace
@@ -54,6 +55,10 @@ class TransformerTagger(Tagger):
         self._tokenizer = tokenizer
         self._max_length = int(metadata.training_details["max_length"])
         self._batch_size = int(metadata.training_config["inference_batch_size"])
+        # A fast (Rust) tokenizer sets its truncation and padding state on every call and
+        # raises "Already borrowed" when two threads call it at once: the API serves requests
+        # from a thread pool, so tokenisation is serialised. The forward pass runs in parallel.
+        self._tokenizer_lock = threading.Lock()
 
     @classmethod
     def train(
@@ -137,6 +142,7 @@ class TransformerTagger(Tagger):
                 schedule.step()
                 optimizer.zero_grad()
                 losses.append(float(loss.item()))
+            self._model.eval()
             micro_f1 = tune_score_cutoff(self, validation).validation_micro_f1
             entry = {
                 "epoch": epoch,
@@ -168,7 +174,8 @@ class TransformerTagger(Tagger):
         return {"best_epoch": best_epoch, "epochs_run": len(history), "history": history}
 
     def score(self, titles: Sequence[str]) -> ScoreMatrix:
-        self._model.eval()
+        """Scores in inference mode. Holds no per-call state on the Tagger, so concurrent calls
+        are safe: the model must already be in eval mode, as after training or loading."""
         rows: list[ScoreMatrix] = [np.empty((0, len(self.supported_tags)), dtype=np.float64)]
         with torch.inference_mode():
             for start in range(0, len(titles), self._batch_size):
@@ -179,13 +186,14 @@ class TransformerTagger(Tagger):
 
     def _encode(self, titles: list[str]) -> dict[str, torch.Tensor]:
         """Tokenise a batch, padded to its own longest Title (dynamic padding)."""
-        encoded = self._tokenizer(
-            titles,
-            truncation=True,
-            max_length=self._max_length,
-            padding=True,
-            return_tensors="pt",
-        )
+        with self._tokenizer_lock:
+            encoded = self._tokenizer(
+                titles,
+                truncation=True,
+                max_length=self._max_length,
+                padding=True,
+                return_tensors="pt",
+            )
         return {key: value for key, value in encoded.items() if key != "token_type_ids"}
 
     def _save_model(self, directory: Path) -> None:
@@ -199,7 +207,9 @@ class TransformerTagger(Tagger):
         transformers_logging.disable_progress_bar()
         tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=True)
         model = AutoModelForSequenceClassification.from_pretrained(model_dir, local_files_only=True)
+        # A loaded Tagger only serves: eval mode (no dropout) and no gradient on any weight.
         model.eval()
+        model.requires_grad_(False)
         return cls(metadata, model, tokenizer)
 
 

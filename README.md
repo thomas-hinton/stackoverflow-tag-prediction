@@ -86,12 +86,13 @@ and re-running it with the same configuration reproduces the files byte for byte
 
 ## Run the API locally
 
-`serve` starts an HTTP API on the Linear tagger saved by `train` (in `artifacts/linear/` by
-default). The interactive documentation, with the request and response models and their
-examples, is at <http://127.0.0.1:8000/docs>.
+`serve` starts an HTTP API on both Taggers saved by `train` (in `artifacts/linear/` and
+`artifacts/transformer/` by default), loaded once at startup. The interactive documentation, with
+the request and response models and their examples, is at <http://127.0.0.1:8000/docs>.
 
 ```bash
-uv run so-tagger serve                    # http://127.0.0.1:8000
+uv run so-tagger serve                              # Linear tagger only, without the extra
+uv run --extra transformer so-tagger serve          # both Taggers
 ```
 
 ```bash
@@ -111,11 +112,12 @@ curl -s -X POST http://127.0.0.1:8000/suggest \
 }
 ```
 
-![Swagger UI page of the API with the POST /suggest operation expanded: the request body example
-with a title and a tagger, then the 200, 422 and 503 responses with their JSON
+![Swagger UI page of the API with the POST /suggest operation expanded: the SuggestRequest schema
+of the request body, whose tagger field lists the enum values linear and transformer with linear
+as default, then the 200, 422 and 503 responses with their JSON
 examples](docs/images/screenshots/api-docs-suggest.png)
 
-*`/docs` with `POST /suggest` expanded: the request body and each response, with its example.*
+*`/docs` with `POST /suggest` expanded: the request body schema shows `tagger` accepts `linear` (default) or `transformer`, then each response with its example.*
 
 - **`POST /suggest`** takes a `title` and an optional `tagger` (`linear` by default). It returns 1
   to 5 Suggestions by descending Score, from the Suggestion policy at the Tagger's tuned Score
@@ -123,7 +125,10 @@ examples](docs/images/screenshots/api-docs-suggest.png)
   [Releases](#releases)), or `dev` for a Tagger fresh from `train`.
 - **422** for an empty or whitespace-only Title, a Title longer than 300 characters (after
   stripping), or an unknown `tagger`; the message lists the valid names.
-- **503** for a known Tagger that is not loaded: `transformer` is not served yet (#11).
+- **`"tagger": "transformer"`** asks the Transformer tagger instead; the response says which
+  Tagger answered.
+- **503** for a known Tagger that is not loaded, e.g. `transformer` when its directory is
+  missing.
 - **`GET /health`** lists every Tagger kind with `loaded`, `version` (`null` when not loaded) and
   `n_supported_tags`. It returns 200 when the Linear tagger is loaded and 503 otherwise.
 
@@ -132,14 +137,19 @@ examples](docs/images/screenshots/api-docs-suggest.png)
 | `--host` | `SO_TAGGER_HOST` | `127.0.0.1` |
 | `--port` | `SO_TAGGER_PORT` | `8000` |
 | `--linear-dir` | `SO_TAGGER_LINEAR_DIR` | `artifacts/linear` |
+| `--transformer-dir` | `SO_TAGGER_TRANSFORMER_DIR` | `artifacts/transformer` |
+| `--torch-threads` | `SO_TAGGER_TORCH_THREADS` | `0` (PyTorch's default) |
 
 A missing Tagger directory does not stop the server: that Tagger is reported as not loaded.
-Each `POST /suggest` logs one JSON line with the Tagger, the Title length, the number of
-Suggestions and the latency. Titles themselves are only logged at debug level.
+The Transformer tagger serves in eval mode with gradients disabled; requests are handled
+concurrently, and its tokenizer, which is not thread-safe, is called under a lock.
+Each `POST /suggest` logs one JSON line with the Tagger and its version, the Title length, the
+number of Suggestions and the latency, so that the latency of the two Taggers can be compared.
+Titles themselves are only logged at debug level.
 
 ## Run with Docker
 
-Each Release has a Docker image on GitHub Container Registry with its Taggers built in. On a
+Each Release has a Docker image on GitHub Container Registry with both Taggers built in. On a
 machine with only Docker, from a clone of the repository (or with just
 [`compose.yaml`](compose.yaml)):
 
@@ -154,26 +164,49 @@ curl -s -X POST http://127.0.0.1:8000/suggest \
 ```
 
 ```json
-{"tagger": "linear", "version": "v0.1.0", "suggestions": [{"tag": "python", "score": 0.9997604176236493}, {"tag": "json", "score": 0.9902810532193043}]}
+{"tagger": "linear", "version": "v0.3.0", "suggestions": [{"tag": "python", "score": 0.9997604176236493}, {"tag": "json", "score": 0.9902810532193043}]}
 ```
 
-`SO_TAGGER_IMAGE_TAG=v0.1.0 docker compose up` runs a given Release instead of the latest one,
-and `SO_TAGGER_PORT` changes the port on the host. The service restarts unless stopped, and
-Docker marks it healthy once `GET /health` returns 200.
+Add `"tagger": "transformer"` to the body to ask the Transformer tagger.
+
+`SO_TAGGER_IMAGE_TAG=v0.3.0 docker compose up` runs a given Release instead of the latest one,
+`SO_TAGGER_PORT` changes the port on the host, and `SO_TAGGER_TORCH_THREADS` caps the CPU
+threads of the Transformer tagger. The service restarts unless stopped, and Docker marks it
+healthy once `GET /health` returns 200.
+
+Measured on an image built locally from the `v0.3.0` Tagger archives (Docker 29, WSL 2 on a
+laptop CPU), with the network disabled (`--network none`):
+
+| Measure | Value |
+| --- | --- |
+| Image size | 1.53 GB uncompressed, about 0.6 GB to download |
+| Memory at idle, both Taggers loaded | about 360 MiB |
+| Memory under load (16 concurrent clients, both Taggers) | about 400 MiB |
+| Cold start (`docker run` to `/health` answering 200) | about 7.4 s |
+| Latency per request, alone | about 20 ms (Linear), about 25 ms (Transformer) |
+
+The recommended memory limit is **1 GiB**: [`compose.yaml`](compose.yaml) sets it, leaving room
+for longer Titles and bursts. PyTorch accounts for most of the image (about 0.8 GB of the
+1.11 GB virtual environment), the Transformer tagger for 0.28 GB.
 
 To build the image yourself from a Release instead of pulling it:
 
 ```bash
-RELEASE_TAG=v0.1.0 docker compose -f compose.yaml -f compose.build.yaml up --build
+RELEASE_TAG=v0.3.0 docker compose -f compose.yaml -f compose.build.yaml up --build
 # or, without Compose:
-docker build --build-arg RELEASE_TAG=v0.1.0 -t so-tagger:v0.1.0 .
+docker build --build-arg RELEASE_TAG=v0.3.0 -t so-tagger:v0.3.0 .
 ```
 
-The [`Dockerfile`](Dockerfile) installs the runtime dependencies only (`uv sync --frozen
---no-dev`, no deep-learning stack) on a slim Python 3.12 base, downloads the Tagger archive of
-the Release given by `RELEASE_TAG` at build time, and runs `so-tagger serve` as a non-root user
-on port 8000. It carries a `HEALTHCHECK` on `/health` and OCI labels for the source repository,
-the Release version and the commit.
+The [`Dockerfile`](Dockerfile) is a multi-stage build on a slim Python 3.12 base. It installs the
+runtime dependencies with the `transformer` extra (`uv sync --frozen --no-dev --extra
+transformer`), whose PyTorch comes from the CPU wheel index only, and drops the third-party test
+suites and torch's C++ headers. It downloads both Tagger archives of the Release given by
+`RELEASE_TAG` at build time, and the build fails with the missing URL when the Release lacks
+one. The final stage holds no build tool, no cache, no test and no notebook. The image sets the
+Hugging Face offline variables (`HF_HUB_OFFLINE`, `TRANSFORMERS_OFFLINE`), so the container
+never reaches the network at runtime, and runs `so-tagger serve` as a non-root user on port
+8000. It carries a `HEALTHCHECK` on `/health` and OCI labels for the source repository, the
+Release version and the commit.
 
 ## Releases
 
@@ -183,22 +216,23 @@ builds, smoke-tests and pushes its Docker image.
 
 ```mermaid
 flowchart TD
-    taggerDir["Tagger directory<br/>artifacts/linear/"] -->|"so-tagger package"| assets["Release assets<br/>linear-tagger.tar.gz<br/>linear-metrics.json"]
+    taggerDir["Tagger directories<br/>artifacts/linear/<br/>artifacts/transformer/"] -->|"so-tagger package"| assets["Release assets<br/>linear-tagger.tar.gz, linear-metrics.json<br/>transformer-tagger.tar.gz, transformer-metrics.json"]
     assets -->|"gh release create"| release["Release vX.Y.Z"]
     subgraph cdWorkflow ["CD workflow"]
-        build["Build image<br/>RELEASE_TAG=vX.Y.Z"] --> smoke["Smoke test<br/>/health and POST /suggest"]
+        build["Build image<br/>RELEASE_TAG=vX.Y.Z"] --> smoke["Smoke test<br/>/health lists both Taggers<br/>POST /suggest with each"]
         smoke --> push["Push to GHCR<br/>vX.Y.Z and latest"]
     end
     release --> onRelease(["release: published"])
     onRelease --> build
     onDispatch(["workflow_dispatch"]) --> build
     onCall(["workflow_call<br/>(training workflow)"]) --> build
-    release -. "Tagger archive downloaded at build time" .-> build
+    release -. "both Tagger archives downloaded at build time" .-> build
     push --> up["docker compose up<br/>serves Suggestions"]
 ```
 
 *Look at the dashed arrow: the image never contains a Tagger from the repository; whichever of
-the three triggers starts the CD workflow, the build downloads the Tagger archive from the Release.*
+the three triggers starts the CD workflow, the build downloads both Tagger archives from the
+Release.*
 
 ### Release asset convention
 
@@ -207,24 +241,27 @@ the three triggers starts the CD workflow, the build downloads the Tagger archiv
   - `<kind>-tagger.tar.gz`: the Tagger directory, its files at the archive root;
   - `<kind>-metrics.json`: the [metrics file](docs/metrics.md) of that Tagger on the test split.
 
-  For now only `linear-tagger.tar.gz` and `linear-metrics.json` exist; the Transformer tagger
-  adds `transformer-*` assets.
+  The Docker image needs both `linear-tagger.tar.gz` and `transformer-tagger.tar.gz`.
 
 `package` builds these assets from a Tagger directory. It writes the Release tag into the
 archived `metadata.json` as the Tagger's `version`, which `/health` and `/suggest` report; the
 Tagger directory itself is left untouched.
 
 ```bash
-uv run so-tagger package --release-tag v0.1.0 --metrics metrics/linear-test.json
+uv run so-tagger package --release-tag v0.3.0 --metrics metrics/linear-test.json
 # -> dist/linear-tagger.tar.gz and dist/linear-metrics.json
+uv run --extra transformer so-tagger package --release-tag v0.3.0 --tagger transformer \
+  --metrics metrics/transformer-test.json
+# -> dist/transformer-tagger.tar.gz and dist/transformer-metrics.json
 ```
 
 ### Continuous delivery
 
 The [CD workflow](.github/workflows/cd.yml) builds the image of a Release, starts it, checks
-that `/health` answers 200 with the Release tag and that `POST /suggest` returns at least one
-Suggestion, then pushes `ghcr.io/thomas-hinton/stackoverflow-tag-prediction` with the tags
-`vX.Y.Z` and `latest`. It runs:
+that `/health` answers 200 and lists both Taggers as loaded with the Release tag, and that
+`POST /suggest` returns at least one Suggestion from each Tagger, then pushes
+`ghcr.io/thomas-hinton/stackoverflow-tag-prediction` with the tags `vX.Y.Z` and `latest`. It
+runs:
 
 - on `release: published`, when a Release is published by hand;
 - on `workflow_dispatch` with a `release_tag` input, to rebuild the image of an existing Release
@@ -242,12 +279,22 @@ Releases are normally published by the [training workflow](#training-and-releasi
 cannot run, a Release is made by hand from a clone on `main`:
 
 ```bash
+uv sync --extra transformer
 uv run so-tagger train                    # artifacts/linear/
 uv run so-tagger evaluate                 # metrics/linear-test.json
-uv run so-tagger package --release-tag v0.1.0 --metrics metrics/linear-test.json
-gh release create v0.1.0 dist/linear-tagger.tar.gz dist/linear-metrics.json \
-  --target main --prerelease --title v0.1.0 --notes "Linear tagger trained by hand."
+uv run so-tagger train --tagger transformer      # artifacts/transformer/, about 25 minutes
+uv run so-tagger evaluate --tagger transformer   # metrics/transformer-test.json
+uv run so-tagger package --release-tag v0.3.0 --metrics metrics/linear-test.json
+uv run so-tagger package --release-tag v0.3.0 --tagger transformer \
+  --metrics metrics/transformer-test.json
+gh release create v0.3.0 dist/linear-tagger.tar.gz dist/linear-metrics.json \
+  dist/transformer-tagger.tar.gz dist/transformer-metrics.json \
+  --target main --prerelease --title v0.3.0 --notes "Both Taggers trained by hand."
 ```
+
+Until the training workflow trains the Transformer tagger too (#12), a Release it publishes
+holds the Linear tagger only, and its image build fails on the missing
+`transformer-tagger.tar.gz`: release both Taggers by hand meanwhile.
 
 Publishing the Release starts the CD workflow; follow it with `gh run watch`. The workflow
 pushes the image with the repository's `GITHUB_TOKEN`, and the image's
