@@ -1,7 +1,11 @@
 name: CT
 
-# Continuous training: trains the Linear tagger on a GitHub-hosted runner, checks it against the
-# quality gate and publishes it as a Release, then calls the CD workflow to build its image.
+# Continuous training: trains both Taggers in parallel on GitHub-hosted runners, checks each one
+# against its own quality-gate floor, publishes them together as one Release, then calls the CD
+# workflow to build the image that serves them.
+#
+#   prepare ──┬── train-linear ──────┬── release ── deliver (CD)
+#             └── train-transformer ─┘
 #
 # A Release created here with the default GITHUB_TOKEN triggers no `release` event, so the CD
 # workflow is called explicitly through `workflow_call`.
@@ -17,6 +21,12 @@ on:
         required: false
         type: boolean
         default: false
+      taggers:
+        description: "Taggers to train; anything but both forces a dry run (debugging only)"
+        required: false
+        type: choice
+        options: [both, linear, transformer]
+        default: both
 
 permissions:
   contents: write # create the Release
@@ -28,41 +38,55 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  train:
-    name: train
+  prepare:
+    name: prepare
     runs-on: ubuntu-latest
-    # The Linear tagger trains in seconds; #12 raises this for the Transformer tagger.
     timeout-minutes: 15
     outputs:
-      release_tag: ${{ steps.version.outputs.tag }}
-      released: ${{ steps.release.outputs.released }}
+      release_tag: ${{ steps.inputs.outputs.tag }}
+      dry_run: ${{ steps.inputs.outputs.dry_run }}
+      taggers: ${{ steps.inputs.outputs.taggers }}
     env:
       GH_TOKEN: ${{ github.token }}
-      METRICS: metrics/linear-test.json
-      NOTES: release-notes.md
-      GATE_RESULT: gate-result.txt
     steps:
+      # A Release always holds both Taggers: a run limited to one of them is a dry run.
       - name: Validate the inputs
-        id: version
+        id: inputs
         env:
           VERSION: ${{ inputs.version }}
           DRY_RUN: ${{ inputs.dry_run }}
+          TAGGERS: ${{ inputs.taggers }}
         run: |
           if ! [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
             echo "::error::Version '$VERSION' is not MAJOR.MINOR.PATCH without a leading v (e.g. 0.2.0)."
             exit 1
           fi
+          case "$TAGGERS" in
+            both) taggers='["linear","transformer"]' ;;
+            linear|transformer)
+              taggers="[\"$TAGGERS\"]"
+              if [ "$DRY_RUN" != "true" ]; then
+                echo "::notice::Only the $TAGGERS Tagger is trained: this run is a dry run, a Release always holds both Taggers."
+                DRY_RUN=true
+              fi
+              ;;
+            *) echo "::error::Unknown taggers '$TAGGERS': expected both, linear or transformer."; exit 1 ;;
+          esac
           if [ "$DRY_RUN" != "true" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
             echo "::error::Releases are only published from main, not from $GITHUB_REF. Use dry_run to try another branch."
             exit 1
           fi
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          {
+            echo "tag=v$VERSION"
+            echo "dry_run=$DRY_RUN"
+            echo "taggers=$taggers"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v7
 
       - name: Fail if the Release already exists
         env:
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_TAG: ${{ steps.inputs.outputs.tag }}
         run: |
           if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG" > /dev/null; then
             echo "::error::Tag $RELEASE_TAG already exists: choose another version."
@@ -80,7 +104,6 @@ jobs:
           enable-cache: true
           python-version: "3.12"
 
-      # The Linear tagger needs no `transformer` extra.
       - name: Install dependencies
         run: uv sync --frozen
 
@@ -96,84 +119,226 @@ jobs:
             exit 1
           fi
 
+  train:
+    name: train-${{ matrix.tagger }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    # The Linear tagger trains in seconds. The Transformer tagger fine-tunes DistilBERT on CPU
+    # for up to `epochs` epochs: stay well within GitHub's 6-hour job limit.
+    timeout-minutes: ${{ matrix.tagger == 'transformer' && 330 || 20 }}
+    strategy:
+      # Each Tagger reaches its own verdict, even when the other one fails.
+      fail-fast: false
+      matrix:
+        tagger: ${{ fromJSON(needs.prepare.outputs.taggers) }}
+    env:
+      TAGGER: ${{ matrix.tagger }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      METRICS: metrics/${{ matrix.tagger }}-test.json
+      GATE_RESULT: gate/${{ matrix.tagger }}.txt
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      # An empty gate result from the start keeps the artifact's layout (dist/, metrics/, gate/)
+      # stable even when the job stops early; the gate fills it in.
+      - name: Create the gate result
+        run: mkdir -p "$(dirname "$GATE_RESULT")" && touch "$GATE_RESULT"
+
+      # The two Taggers install different dependencies: they keep separate uv caches.
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.4.0
+        with:
+          enable-cache: true
+          cache-suffix: ${{ matrix.tagger }}
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          if [ "$TAGGER" = "transformer" ]; then
+            uv sync --frozen --extra transformer
+          else
+            uv sync --frozen
+          fi
+
+      - name: Read the Transformer checkpoint
+        id: checkpoint
+        if: ${{ matrix.tagger == 'transformer' }}
+        run: |
+          checkpoint=$(uv run python -c "from so_tagger.config import load_config; print(load_config().transformer_tagger.checkpoint)")
+          echo "name=$checkpoint" >> "$GITHUB_OUTPUT"
+
+      # The pretrained checkpoint is downloaded from the Hugging Face Hub once, then reused. It is
+      # saved even when the job fails later (e.g. at the gate), so the next run need not download it.
+      - name: Restore the Hugging Face checkpoint
+        id: hf-cache
+        if: ${{ matrix.tagger == 'transformer' }}
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/huggingface
+          key: huggingface-${{ runner.os }}-${{ steps.checkpoint.outputs.name }}
+
+      # One PyTorch thread per physical core. Measured on a 4-vCPU runner (2 cores): an epoch takes
+      # 98 s on 2 threads and 168 s on 4, since hyperthreads compete for the same core.
+      - name: Give PyTorch one thread per physical core
+        if: ${{ matrix.tagger == 'transformer' }}
+        run: |
+          cores=$(lscpu -p=Core,Socket | grep -v '^#' | sort -u | wc -l)
+          echo "PyTorch uses $cores threads ($(nproc) CPUs)."
+          echo "SO_TAGGER_TORCH_THREADS=$cores" >> "$GITHUB_ENV"
+
+      # The Transformer tagger logs its progress every 50 steps and at the end of every epoch.
       - name: Train
-        run: uv run so-tagger train --tagger linear
+        run: uv run so-tagger train --tagger "$TAGGER"
+
+      - name: Save the Hugging Face checkpoint
+        if: ${{ always() && matrix.tagger == 'transformer' && steps.hf-cache.outputs.cache-hit != 'true' }}
+        continue-on-error: true # nothing to save when the job failed before the download
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/huggingface
+          key: huggingface-${{ runner.os }}-${{ steps.checkpoint.outputs.name }}
 
       - name: Evaluate on the test split
-        run: uv run so-tagger evaluate --tagger linear --split test --output "$METRICS"
+        run: uv run so-tagger evaluate --tagger "$TAGGER" --split test --output "$METRICS"
 
       # Packaged before the gate so that a rejected Tagger can still be downloaded and inspected.
       - name: Package
-        env:
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
-        run: uv run so-tagger package --tagger linear --release-tag "$RELEASE_TAG" --metrics "$METRICS"
-
-      - name: Write the Release notes
-        env:
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: uv run so-tagger release-notes --metrics "$METRICS" --run-url "$RUN_URL" > "$NOTES"
+        run: uv run so-tagger package --tagger "$TAGGER" --release-tag "$RELEASE_TAG" --metrics "$METRICS"
 
       - name: Quality gate
         run: |
           set -o pipefail
-          uv run so-tagger gate --tagger linear --metrics "$METRICS" 2>&1 | tee "$GATE_RESULT"
+          uv run so-tagger gate --tagger "$TAGGER" --metrics "$METRICS" 2>&1 | tee "$GATE_RESULT"
 
+      # Also after a timeout, which GitHub treats as a cancellation.
       - name: Upload the Tagger and its metrics
-        if: ${{ !cancelled() }}
+        if: ${{ always() }}
         uses: actions/upload-artifact@v7
         with:
-          name: linear-tagger-${{ steps.version.outputs.tag || 'invalid-version' }}
+          name: ${{ matrix.tagger }}-tagger-${{ needs.prepare.outputs.release_tag }}
           path: |
             dist/
             ${{ env.METRICS }}
-            ${{ env.NOTES }}
             ${{ env.GATE_RESULT }}
           if-no-files-found: warn
 
+  release:
+    name: release
+    needs: [prepare, train]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+      NOTES: release-notes.md
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.4.0
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Download the Taggers
+        uses: actions/download-artifact@v8
+        with:
+          pattern: "*-tagger-${{ needs.prepare.outputs.release_tag }}"
+          merge-multiple: true
+
+      - name: Write the Release notes
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          metrics=()
+          for kind in linear transformer; do
+            if [ -f "metrics/$kind-test.json" ]; then metrics+=(--metrics "metrics/$kind-test.json"); fi
+          done
+          uv run so-tagger release-notes "${metrics[@]}" --run-url "$RUN_URL" > "$NOTES"
+          cat "$NOTES" >> "$GITHUB_STEP_SUMMARY"
+
+      # The asset list names both Taggers, so a Release can never hold only one of them.
       - name: Create the Release
         id: release
-        if: ${{ !inputs.dry_run }}
-        env:
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         run: |
-          gh release create "$RELEASE_TAG" dist/linear-tagger.tar.gz dist/linear-metrics.json \
+          gh release create "$RELEASE_TAG" \
+            dist/linear-tagger.tar.gz dist/linear-metrics.json \
+            dist/transformer-tagger.tar.gz dist/transformer-metrics.json \
             --target "$GITHUB_SHA" --title "$RELEASE_TAG" --notes-file "$NOTES"
           echo "released=true" >> "$GITHUB_OUTPUT"
 
-      - name: Summary
-        if: ${{ always() }}
-        env:
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
-          DRY_RUN: ${{ inputs.dry_run }}
-          RELEASED: ${{ steps.release.outputs.released }}
-        run: |
-          {
-            echo "## Training ${RELEASE_TAG:-(invalid version)}"
-            echo
-            if [ -s "$GATE_RESULT" ]; then
-              echo "**$(sed 's/^Error: //' "$GATE_RESULT")**"
-            else
-              echo "**The run stopped before the quality gate**: see the failed step above."
-            fi
-            echo
-            if [ "$RELEASED" = "true" ]; then
-              echo "Release published: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG. The CD workflow builds its image next."
-            elif [ "$DRY_RUN" = "true" ]; then
-              echo "Dry run: no Release was created. The Tagger and its metrics are in the run's artifacts."
-            else
-              echo "No Release was created. The Tagger and its metrics, if they were produced, are in the run's artifacts."
-            fi
-            echo
-            if [ -s "$NOTES" ]; then cat "$NOTES"; fi
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  cd:
-    name: cd
-    needs: train
-    if: ${{ needs.train.outputs.released == 'true' }}
+  deliver:
+    name: deliver
+    needs: [prepare, release]
+    if: ${{ needs.release.outputs.released == 'true' }}
     permissions:
       contents: read
       packages: write
     uses: ./.github/workflows/cd.yml
     with:
-      release_tag: ${{ needs.train.outputs.release_tag }}
+      release_tag: ${{ needs.prepare.outputs.release_tag }}
+
+  summary:
+    name: summary
+    needs: [prepare, train, release]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download the Taggers
+        if: ${{ needs.prepare.outputs.release_tag != '' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          pattern: "*-tagger-${{ needs.prepare.outputs.release_tag }}"
+          merge-multiple: true
+
+      - name: Summary
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.release_tag }}
+          DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
+          PREPARE: ${{ needs.prepare.result }}
+          RELEASED: ${{ needs.release.outputs.released }}
+        run: |
+          {
+            echo "## Training ${RELEASE_TAG:-(invalid version)}"
+            echo
+            if [ "$PREPARE" != "success" ]; then
+              echo "**The prepare job failed** (inputs or reproducibility check): no Tagger was trained."
+              exit 0
+            fi
+            echo "| Tagger | micro-F1 | P@1 | R@5 | Training time | Quality gate |"
+            echo "| --- | --- | --- | --- | --- | --- |"
+            for kind in linear transformer; do
+              metrics="metrics/$kind-test.json"
+              gate="gate/$kind.txt"
+              if [ -f "$metrics" ]; then
+                row=$(jq -r '[(.metrics.micro_f1 * 1000 | round / 1000), (.metrics.precision_at_k["1"] * 1000 | round / 1000), (.metrics.recall_at_k["5"] * 1000 | round / 1000), ((.training_seconds // 0) | round | tostring + " s")] | join(" | ")' "$metrics")
+              else
+                row="– | – | – | –"
+              fi
+              if [ -s "$gate" ]; then
+                verdict=$(sed 's/^Error: //' "$gate")
+              elif [ -f "$metrics" ]; then
+                verdict="not reached: see the failed step"
+              else
+                verdict="not run, or stopped before evaluation"
+              fi
+              echo "| $kind | $row | $verdict |"
+            done
+            echo
+            if [ "$RELEASED" = "true" ]; then
+              echo "Release published: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG. The CD workflow builds its image next."
+            elif [ "$DRY_RUN" = "true" ]; then
+              echo "Dry run: no Release was created. The Taggers and their metrics are in the run's artifacts."
+            else
+              echo "No Release was created: a Tagger failed its quality gate or its job. Whatever was produced is in the run's artifacts."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

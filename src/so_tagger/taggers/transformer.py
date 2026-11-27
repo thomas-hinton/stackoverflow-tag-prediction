@@ -38,6 +38,9 @@ MODEL_DIR = "model"
 
 logger = logging.getLogger(__name__)
 
+_PROGRESS_EVERY_STEPS = 50
+"""How often a training epoch logs its progress, so that a long run can be followed live."""
+
 
 class TransformerTagger(Tagger):
     """A fine-tuned sequence classification model with one sigmoid output per Supported tag."""
@@ -127,6 +130,12 @@ class TransformerTagger(Tagger):
             optimizer, round(settings.warmup_ratio * total_steps), total_steps
         )
 
+        logger.info(
+            "Fine-tuning for up to %d epochs of %d steps on %d CPU threads.",
+            settings.epochs,
+            steps_per_epoch,
+            torch.get_num_threads(),
+        )
         start = time.perf_counter()
         history: list[dict[str, float]] = []
         best_f1, best_epoch, best_state = -1.0, 0, copy.deepcopy(self._model.state_dict())
@@ -142,6 +151,15 @@ class TransformerTagger(Tagger):
                 schedule.step()
                 optimizer.zero_grad()
                 losses.append(float(loss.item()))
+                if len(losses) % _PROGRESS_EVERY_STEPS == 0:
+                    logger.info(
+                        "Epoch %d: step %d/%d, mean loss %.4f, %.0fs elapsed.",
+                        epoch,
+                        len(losses),
+                        steps_per_epoch,
+                        np.mean(losses),
+                        time.perf_counter() - start,
+                    )
             self._model.eval()
             micro_f1 = tune_score_cutoff(self, validation).validation_micro_f1
             entry = {

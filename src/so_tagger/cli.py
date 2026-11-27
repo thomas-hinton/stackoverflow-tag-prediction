@@ -4,6 +4,7 @@ import json
 import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import replace
 from pathlib import Path
 from typing import Annotated
 
@@ -202,6 +203,15 @@ def train(
         typer.Option(help="Where to save the Tagger directory. Defaults to artifacts/<tagger>."),
     ] = None,
     config: ConfigOption = DEFAULT_CONFIG_PATH,
+    torch_threads: Annotated[
+        int,
+        typer.Option(
+            envvar="SO_TAGGER_TORCH_THREADS",
+            min=0,
+            help="CPU threads PyTorch uses to train the Transformer tagger; overrides "
+            "`num_threads` of the configuration. 0 keeps the configured value.",
+        ),
+    ] = 0,
 ) -> None:
     """Train a Tagger on the training split and save it as a Tagger directory.
 
@@ -214,6 +224,11 @@ def train(
     directory = output_dir or DEFAULT_TAGGERS_DIR / tagger
     with _user_errors():
         project = load_config(config)
+        if torch_threads > 0:
+            project = replace(
+                project,
+                transformer_tagger=replace(project.transformer_tagger, num_threads=torch_threads),
+            )
         train_set = read_questions(splits_dir / "train.jsonl")
         validation_set = read_questions(splits_dir / "validation.jsonl")
         trained = train_tagger(tagger, train_set, validation_set, project)
@@ -358,20 +373,25 @@ def package(
 @app.command("release-notes")
 def release_notes_command(
     metrics: Annotated[
-        Path,
-        typer.Option(help="Metrics file written by `evaluate`.", dir_okay=False),
+        list[Path],
+        typer.Option(
+            help="Metrics file written by `evaluate`, one per Tagger; repeat the option to "
+            "compare several Taggers side by side.",
+            dir_okay=False,
+        ),
     ],
     run_url: Annotated[
-        str | None, typer.Option(help="Link to the workflow run that trained the Tagger.")
+        str | None, typer.Option(help="Link to the workflow run that trained the Taggers.")
     ] = None,
 ) -> None:
-    """Print the Markdown notes of a Release, generated from a Tagger's metrics file.
+    """Print the Markdown notes of a Release, generated from its Taggers' metrics files.
 
-    They hold the metrics table, the Score cut-off, the frequency cut-off, the dataset sizes,
-    the commit and, with --run-url, a link to the workflow run.
+    They hold a table comparing the Taggers side by side (test metrics, Score cut-offs,
+    training times), the frequency cut-off, the dataset sizes, the commit and, with --run-url,
+    a link to the workflow run. The metrics files must share the split, dataset and commit.
     """
     with _user_errors():
-        notes = release_notes(read_metrics_file(metrics), run_url)
+        notes = release_notes([read_metrics_file(path) for path in metrics], run_url)
     typer.echo(notes, nl=False)
 
 
