@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import pytest
@@ -74,7 +75,9 @@ def test_invalid_quality_gate_floors_are_rejected(
 ) -> None:
     text = CONFIG_PATH.read_text(encoding="utf-8")
     path = tmp_path / "config.toml"
-    path.write_text(text.replace("linear = 0.20", replacement), encoding="utf-8")
+    text, replaced = re.subn(r"(?m)^linear = .*$", replacement, text)
+    assert replaced == 1
+    path.write_text(text, encoding="utf-8")
 
     with pytest.raises(ConfigError, match=message):
         load_config(path)
