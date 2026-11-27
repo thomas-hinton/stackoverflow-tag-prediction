@@ -352,9 +352,9 @@ passed their gate, and the image is built only from a published Release.*
 2. **train-linear** and **train-transformer** run in parallel. Each one trains its Tagger,
    evaluates it on the test split, packages the Release assets and runs the quality gate:
    `so-tagger gate` compares the test micro-F1 with the floor of the Tagger kind in
-   `[quality_gate.min_test_micro_f1]` of `config.toml`. Both floors (0.20) are provisional and
-   deliberately low, so that they only catch a broken Tagger; #13 sets them from real scores.
-   One Tagger failing does not stop the other, so every run gives both verdicts.
+   `[quality_gate.min_test_micro_f1]` of `config.toml` (see [Quality-gate
+   floors](#quality-gate-floors)). One Tagger failing does not stop the other, so every run
+   gives both verdicts.
 3. **release** runs only when both training jobs succeeded. It downloads both workflow
    artifacts, writes the Release notes with `so-tagger release-notes` (a side-by-side table of
    both Taggers' test metrics, Score cut-offs and training times, then the frequency cut-off,
@@ -386,6 +386,31 @@ every run.
 | train-transformer | 16 to 27 min, depending on the runner (10 epochs of 180 steps, 95 to 155 s each) |
 | release, summary | about 30 s |
 | deliver (CD) | 2 to 6 min |
+
+### Quality-gate floors
+
+Each Tagger kind has its own floor on the test micro-F1 in `[quality_gate.min_test_micro_f1]`
+of `config.toml`. The floors follow one rule, recorded next to them with the scores they come
+from:
+
+> **floor = lowest test micro-F1 observed on the CT runs − 0.03, rounded down to two decimals**
+
+A floor must catch a real regression without failing on ordinary run-to-run noise, so the
+margin was chosen after measuring that noise:
+
+| Tagger | Test micro-F1 observed | Run-to-run noise | Floor |
+| --- | --- | --- | --- |
+| Linear | 0.5085 on 4 CT runs, and on 5 local runs with different seeds | none: liblinear reaches the same optimum whatever the seed | **0.47** |
+| Transformer | 0.5124, 0.5124, 0.5013 and 0.4900 on 4 CT runs | up to 0.022: the runner's CPU and the thread count change the result | **0.45** |
+
+The 0.03 margin is larger than the noise of either Tagger, so a Tagger that trains as usual
+passes with room to spare, while one that loses about 0.04 to 0.06 of micro-F1 fails: a Transformer stuck on
+the "Tag frequency" plateau (validation micro-F1 0.13, see `config.toml`), or a change that
+silently degrades either Tagger. Validation micro-F1 confirms that the Transformer's score does
+not depend on a lucky epoch: it plateaus from epoch 8, between 0.519 and 0.531, on every run.
+
+When a change is meant to improve a Tagger, apply the rule again to the new scores in the same
+pull request, so that the floor follows the Tagger and a later regression is caught.
 
 ### Reading a failed run
 
