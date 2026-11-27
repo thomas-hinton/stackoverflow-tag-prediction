@@ -393,7 +393,7 @@ Each Tagger kind has its own floor on the test micro-F1 in `[quality_gate.min_te
 of `config.toml`. The floors follow one rule, recorded next to them with the scores they come
 from:
 
-> **floor = lowest test micro-F1 observed on the CT runs − 0.03, rounded down to two decimals**
+> **floor = lowest test micro-F1 observed on the CT runs - 0.03, rounded down to two decimals**
 
 A floor must catch a real regression without failing on ordinary run-to-run noise, so the
 margin was chosen after measuring that noise:
@@ -403,14 +403,23 @@ margin was chosen after measuring that noise:
 | Linear | 0.5085 on 4 CT runs, and on 5 local runs with different seeds | none: liblinear reaches the same optimum whatever the seed | **0.47** |
 | Transformer | 0.5124, 0.5124, 0.5013 and 0.4900 on 4 CT runs | up to 0.022: the runner's CPU and the thread count change the result | **0.45** |
 
+The gate reads only the test micro-F1. For reference, the same runs gave a macro-F1 of 0.463
+(Linear) and 0.342 to 0.374 (Transformer), and a validation micro-F1 of 0.523 (Linear) and 0.525
+to 0.531 at the Transformer's kept epoch.
+
 The 0.03 margin is larger than the noise of either Tagger, so a Tagger that trains as usual
-passes with room to spare, while one that loses about 0.04 to 0.06 of micro-F1 fails: a Transformer stuck on
-the "Tag frequency" plateau (validation micro-F1 0.13, see `config.toml`), or a change that
-silently degrades either Tagger. Validation micro-F1 confirms that the Transformer's score does
-not depend on a lucky epoch: it plateaus from epoch 8, between 0.519 and 0.531, on every run.
+passes with room to spare. After rounding down, each floor sits about 0.04 below the lowest
+score observed for its kind: a change that costs that much micro-F1 fails the gate, and so does
+a grossly broken run, such as a Transformer stuck on the "predict the Tag frequencies" plateau
+(validation micro-F1 0.13, see `config.toml`). Validation micro-F1 also shows that the
+Transformer's score does not hang on a lucky epoch: it plateaus from epoch 8, between 0.519 and
+0.531, on the 3 runs whose epochs were checked.
 
 When a change is meant to improve a Tagger, apply the rule again to the new scores in the same
-pull request, so that the floor follows the Tagger and a later regression is caught.
+pull request, so that the floor follows the Tagger and a later regression is caught. Four
+Transformer runs are a thin sample: if a run that trained correctly falls below its floor
+because a runner scores lower than any seen so far, add its score to the observed ones in
+`config.toml` and apply the rule again.
 
 ### Reading a failed run
 

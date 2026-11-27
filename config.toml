@@ -53,13 +53,16 @@ num_threads = 0             # CPU threads for PyTorch; 0 keeps PyTorch's default
 # Rule: floor = lowest test micro-F1 observed on the CT runs - 0.03, rounded down to two decimals.
 # The margin must stay above the run-to-run noise, so that only a real regression fails the gate.
 #
-# Observed on 2026-11-27 on 4 CT runs (same split, configuration and seed 42):
-#   Linear tagger       0.50851 on every run, and on 5 local runs with seeds 42, 1, 7, 2024 and
-#                       31415 (liblinear reaches the same optimum whatever the seed): noise 0.
-#   Transformer tagger  0.51237, 0.51237, 0.5013 and 0.48998: hosted runners differ in CPU, and
-#                       the thread count changes the arithmetic, so the score moves by up to 0.022.
-#                       Validation micro-F1 plateaus from epoch 8, between 0.519 and 0.531 on every
-#                       run, so the score does not hang on one lucky epoch.
+# Observed on 2026-11-27 on 4 CT runs (same split, configuration and seed 42; one of them gave
+# PyTorch 4 threads instead of 2):
+#   Linear tagger       test micro-F1 0.50851 on every run, and on 5 local runs with seeds 42, 1,
+#                       7, 2024 and 31415 (liblinear reaches the same optimum whatever the seed):
+#                       noise 0. Macro-F1 0.463, validation micro-F1 0.523.
+#   Transformer tagger  test micro-F1 0.51237, 0.51237, 0.5013 and 0.48998: hosted runners differ
+#                       in CPU, and the thread count changes the arithmetic, so the score moves by
+#                       up to 0.022. Macro-F1 0.342 to 0.374. Validation micro-F1 plateaus from
+#                       epoch 8, between 0.519 and 0.531 on the 3 runs whose epochs were checked,
+#                       so the score does not hang on one lucky epoch.
 # The 0.03 margin is larger than that noise.
 linear = 0.47        # 0.50851 - 0.03 = 0.47851
 transformer = 0.45   # 0.48998 - 0.03 = 0.45998
