@@ -178,11 +178,14 @@ jobs:
           path: ~/.cache/huggingface
           key: huggingface-${{ runner.os }}-${{ steps.checkpoint.outputs.name }}
 
-      # PyTorch defaults to the physical cores only, even with OMP_NUM_THREADS set: `train`
-      # calls torch.set_num_threads with every CPU the runner offers.
-      - name: Use every CPU for PyTorch
+      # One PyTorch thread per physical core. Measured on a 4-vCPU runner (2 cores): an epoch takes
+      # 98 s on 2 threads and 168 s on 4, since hyperthreads compete for the same core.
+      - name: Give PyTorch one thread per physical core
         if: ${{ matrix.tagger == 'transformer' }}
-        run: echo "SO_TAGGER_TORCH_THREADS=$(nproc)" >> "$GITHUB_ENV"
+        run: |
+          cores=$(lscpu -p=Core,Socket | grep -v '^#' | sort -u | wc -l)
+          echo "PyTorch uses $cores threads ($(nproc) CPUs)."
+          echo "SO_TAGGER_TORCH_THREADS=$cores" >> "$GITHUB_ENV"
 
       # The Transformer tagger logs its progress every 50 steps and at the end of every epoch.
       - name: Train

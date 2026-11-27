@@ -366,19 +366,20 @@ passed their gate, and the image is built only from a published Release.*
    gate results and the Release link.
 
 The **train-transformer** job fine-tunes DistilBERT on CPU, so it is long. It has a 330-minute
-timeout, within GitHub's 6-hour job limit; it caches the `uv` environment and the Hugging Face
-checkpoint between runs, gives PyTorch every CPU of the runner (`SO_TAGGER_TORCH_THREADS=$(nproc)`, the
-environment variable of `train --torch-threads`), and
-logs its progress every 50 steps and after every epoch, so the run can be followed live with
-`gh run watch` or in the job log.
+timeout, within GitHub's 6-hour job limit. It caches the `uv` environment and the Hugging Face
+checkpoint between runs. It gives PyTorch one thread per physical core of the runner through
+`SO_TAGGER_TORCH_THREADS`, the environment variable of `train --torch-threads`: on a 4-vCPU
+runner with 2 cores, an epoch takes 98 s on 2 threads and 168 s on 4. It logs its progress every
+50 steps and after every epoch, so the run can be followed live with `gh run watch` or in the
+job log.
 
-| Job | Expected duration on a GitHub-hosted runner |
+| Job | Expected duration on a GitHub-hosted runner (measured on the first dry runs) |
 | --- | --- |
-| prepare | DURATION_PREPARE |
-| train-linear | DURATION_LINEAR |
-| train-transformer | DURATION_TRANSFORMER |
-| release, summary | DURATION_RELEASE |
-| deliver (CD) | DURATION_DELIVER |
+| prepare | about 20 s |
+| train-linear | about 20 s |
+| train-transformer | about 17 min (10 epochs of 180 steps, about 100 s each) |
+| release, summary | about 20 s |
+| deliver (CD) | about 2 to 4 min |
 
 ### Reading a failed run
 
