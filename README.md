@@ -369,17 +369,23 @@ The **train-transformer** job fine-tunes DistilBERT on CPU, so it is long. It ha
 timeout, within GitHub's 6-hour job limit. It caches the `uv` environment and the Hugging Face
 checkpoint between runs. It gives PyTorch one thread per physical core of the runner through
 `SO_TAGGER_TORCH_THREADS`, the environment variable of `train --torch-threads`: on a 4-vCPU
-runner with 2 cores, an epoch takes 98 s on 2 threads and 168 s on 4. It logs its progress every
-50 steps and after every epoch, so the run can be followed live with `gh run watch` or in the
-job log.
+runner with 2 cores, an epoch took 98 s on 2 threads and 168 s on 4 on the same runner model.
+The issue asked for one thread per CPU; one per physical core is used instead because it is
+faster. It logs its progress every 50 steps and after every epoch, so the run can be followed
+live with `gh run watch` or in the job log.
 
-| Job | Expected duration on a GitHub-hosted runner (measured on the first dry runs) |
+Hosted runners do not all have the same CPU, so the Transformer tagger's training time **and its
+scores** vary from run to run, even with the same thread count: the first runs gave a test
+micro-F1 of 0.512 in 16 min and of 0.490 in 26 min. The Linear tagger gives the same scores on
+every run.
+
+| Job | Expected duration on a GitHub-hosted runner (measured on the first runs) |
 | --- | --- |
 | prepare | about 20 s |
-| train-linear | about 20 s |
-| train-transformer | about 17 min (10 epochs of 180 steps, about 100 s each) |
-| release, summary | about 20 s |
-| deliver (CD) | about 2 to 4 min |
+| train-linear | about 25 s |
+| train-transformer | 16 to 27 min, depending on the runner (10 epochs of 180 steps, 95 to 155 s each) |
+| release, summary | about 30 s |
+| deliver (CD) | 2 to 6 min |
 
 ### Reading a failed run
 
